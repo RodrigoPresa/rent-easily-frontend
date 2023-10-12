@@ -1,0 +1,6 @@
+{
+  "apiProtocol": "http",
+  "apiHost": "localhost",
+  "apiPort": 8080,
+  "apiPath": "api"
+}
