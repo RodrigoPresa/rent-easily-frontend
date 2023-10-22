@@ -26,10 +26,27 @@ export interface AuthResponse {
 	user?: User;
 }
 
+export interface Credentials{
+	mail: string;
+	password: string;
+}
+
 class LoginRequest {
 	constructor(public login: string, public senha: string) {
 		this.login = login;
 		this.senha = senha;
+	}
+}
+
+class SignUpRequest {
+	constructor(public fullName: string, public cpf: string, public income: number,
+		public registerType: string, public credentials: Credentials) 
+	{
+		this.fullName = fullName;
+		this.cpf = cpf;
+		this.income = income;
+		this.registerType = registerType;
+		this.credentials = credentials;
 	}
 }
 
@@ -114,14 +131,14 @@ export default class AuthService {
 			body: JSON.stringify(request)
 		};
 		var token: AuthResponse;
-		var url = getBaseUrl('auth') + 'login/';
+		var url = getBaseUrl('user') + 'credentials';
 		const response = await fetch(url, options);
 		if (response.ok) {
 			token = await response.json();
 			saveAuthToken(token);
 			var user = token.user;
 
-            // TODO: Pensar em como será feito o controle de permissões
+			// TODO: Pensar em como será feito o controle de permissões
 			// if (user) {
 			// 	scopes = await AuthService.instance.getAuthUserPermissions(user.id)
 			// 	user.scopes = scopes;
@@ -136,6 +153,29 @@ export default class AuthService {
 			}
 
 			throw new Error("Invalid login");
+		}
+	}
+
+	async signUp(fullName: string, cpf: string, income: number,
+		registerType: string, mail: string, password: string) 
+	{
+		const credentials: Credentials = { mail, password };
+		var request = new SignUpRequest(fullName, cpf, income, registerType, credentials);
+		var url = getBaseUrl('user') + 'create';
+		var options = {
+			method: "POST",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(request)
+		};
+		const response = await fetch(url, options);
+		if (response.ok) {
+			return true;
+		}
+		else {
+			throw new Error("Unable to create user");
 		}
 	}
 

@@ -43,7 +43,7 @@ export function getBaseUrl(model: string) {
 }
 
 const queue: PromiseQueue<any, any> = new PromiseQueue<any, any>();
-type METHOD = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'OPTIONS';
+type METHOD = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'OPTIONS';
 
 export async function promiseRequest(url: string, method?: METHOD, body?: Object, throwError?: boolean, useAuthentication: boolean = true) {
 
@@ -132,32 +132,33 @@ export class ServiceApi<T>{
 
     getList(): Promise<T[]> {
         var baseUrl = this.getBaseUrl();
-        var url = baseUrl + 'list';
+        var url = baseUrl + 'find/all';
 
         return promiseGetRequest(url);
     }
 
     getById(id: number | string): Promise<T> {
         var baseUrl = this.getBaseUrl();
-        var url = baseUrl + `${id}`;
+        var url = baseUrl + `find/id/${id}`;
         return promiseGetRequest(url);
     }
 
     async update(id: number | string, item: Partial<T>): Promise<boolean> {
         var baseUrl = this.getBaseUrl();
-        var url = baseUrl + `${id}`;
-        var result = await promiseRequest(url, 'PUT', item);
+        var url = baseUrl + `update/${id}`;
+        var result = await promiseRequest(url, 'PATCH', item);
         return result !== null;
     }
 
     insert(item: Partial<T>, throwError?: boolean): Promise<T> {
         var baseUrl = this.getBaseUrl();
-        return promiseRequest(baseUrl, 'POST', item, throwError);
+        var url = baseUrl + 'create';
+        return promiseRequest(url, 'POST', item, throwError);
     }
 
     delete(id: number | string) {
         var baseUrl = this.getBaseUrl();
-        var url = baseUrl + `${id}`;
+        var url = baseUrl + `delete/id/${id}`;
         return promiseRequest(url, 'DELETE');
     }
 }

@@ -19,9 +19,9 @@ export default withStyles(theme => ({
     },
     contained: {
         color: theme.palette.primary.contrastText,
-        backgroundColor: theme.palette.primary.main,
+        backgroundColor: '#1e56a0',
         '&:hover': {
-            backgroundColor: theme.palette.primary.dark
+            backgroundColor: 'rgba(30 ,86 ,160, 0.9)'
         },
         '&:disabled': {
             backgroundColor: 'rgba(0, 0, 0, 0.1)',

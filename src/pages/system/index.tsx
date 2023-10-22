@@ -12,8 +12,7 @@ import SystemRootPage from './SystemRootPage';
 import { loadingAction } from '../../reducer/loading';
 import AuthService from '../../services/AuthService';
 
-// const ManagementPage = React.lazy(() => import('../../Pages/System/Management/ManagementPageConf'));
-// const ToolsPage = React.lazy(() => import('../../Pages/System/Tools/ToolsPageConf'));
+const AdvertisementPage = React.lazy(() => import('./Advertisement/AdvertisementPage'));
 
 
 function getRoutePermissions(authUser: User | undefined) {
@@ -21,8 +20,7 @@ function getRoutePermissions(authUser: User | undefined) {
     const routePermissions: IRoutePermission[] = [];
     //if (!authUser) return routePermissions;
 
-    routePermissions.push({ route: 'management', component: SystemRootPage });
-    routePermissions.push({ route: 'tools', component: SystemRootPage });
+    routePermissions.push({ route: 'advertisement', component: AdvertisementPage });
 
     return routePermissions;
 }
@@ -41,7 +39,9 @@ function SystemRoot() {
                 <Suspense fallback={<OverlayLoading loading />}>
                     <Switch>
                         <Route exact path={match.url} component={SystemRootPage} />
-                        {routePermissions.map((r, k) => <Route key={`route-${k}`} path={match.url + "/" + r.route} component={r.component} />)}
+                        {routePermissions.map((r, k) => (                      
+                            <Route key={`route-${k}`} path={match.url + "/" + r.route} component={r.component} />)
+                        )}
                         <Route render={() => <Redirect to={match?.url || ""} />} />
                     </Switch>
                 </Suspense>

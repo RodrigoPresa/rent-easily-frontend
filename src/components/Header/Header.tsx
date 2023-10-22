@@ -10,7 +10,7 @@ import { useSnackbar } from 'notistack';
 import React, { PropsWithChildren, useState } from 'react';
 import { BrowserView, MobileView } from 'react-device-detect';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from "react-router-dom";
+import { Link, useHistory } from "react-router-dom";
 import { RootState } from '../../reducer';
 import { logoutAction } from "../../reducer/Authentication";
 import { useMobileSideNav } from '../MobileSideNav/MobileSideNavContext';
@@ -20,8 +20,7 @@ import { IRoutePermission } from '../../pages/system/IRoutePermissions';
 import User from '../../model/User';
 import { getFirstLettersToAvatar } from '../../utils/util';
 import AuthService from '../../services/AuthService';
-import ManagementMenu from './ManagementMenu';
-import ToolsMenu from './ToolsMenu';
+import Logo from '../../images/logo.png';
 import DefaultButton from '../DefaultButton';
 
 const useStyles = makeStyles(theme => ({
@@ -43,6 +42,7 @@ const useStyles = makeStyles(theme => ({
         boxShadow: 'none',
         display: 'flex',
         // alignItems: 'center',
+        padding: theme.spacing(2, 0),
     },
     toolbar: {
         display: 'flex',
@@ -126,10 +126,9 @@ export interface IHeaderMenuItem {
 
 function getMenuList(routePermissions: IRoutePermission[]): IHeaderMenuItem[] {
     var listMenus: IHeaderMenuItem[] = [];
-    listMenus.push({ label: "Anúncios", url: '/system' });
-    listMenus.push({ label: "Imóveis", url: '/system' });
-    listMenus.push({ label: "Sobre", url: '/system' });
-    listMenus.push({ label: "Ajuda", url: '/system' });
+
+    listMenus.push({ label: "Buscar Anúncios", url: '/system/advertisement' });
+    listMenus.push({ label: "Proprietários", url: '/system/properties' });
 
     return listMenus;
 }
@@ -141,11 +140,10 @@ interface HeaderProps {
 interface InnerHeaderProps extends HeaderProps {
     user: User | undefined;
     profileMenuClick: (event: React.MouseEvent<HTMLElement>) => void;
-    managementMenuClick?: (event: React.MouseEvent<HTMLElement>) => void;
-    toolsMenuClick?: (event: React.MouseEvent<HTMLElement>) => void;
+    onLoginClick: () => void;
 }
 
-function MainMenu({ routePermissions, managementMenuClick, toolsMenuClick, onMenuClick }: MainMenuProps) {
+function MainMenu({ routePermissions, onMenuClick }: MainMenuProps) {
 
     const classes = useStyles();
     const menus = getMenuList(routePermissions);
@@ -158,7 +156,6 @@ function MainMenu({ routePermissions, managementMenuClick, toolsMenuClick, onMen
                 <MenuItem
                     className={classes.menuItem}
                     key={i}
-                    selected={!!(item.url && String(url).includes(item.url))}
                     onClick={onMenuClick}
                     to={item.url}
                     component={Link}>
@@ -170,37 +167,30 @@ function MainMenu({ routePermissions, managementMenuClick, toolsMenuClick, onMen
 }
 
 interface MainMenuProps extends HeaderProps {
-    managementMenuClick?: (event: React.MouseEvent<HTMLElement>) => void;
-    toolsMenuClick?: (event: React.MouseEvent<HTMLElement>) => void;
     onMenuClick?: (event: React.MouseEvent<HTMLElement>) => void;
 }
 
-function DesktopMainMenu({ routePermissions, managementMenuClick, toolsMenuClick }: MainMenuProps) {
+function DesktopMainMenu({ routePermissions }: MainMenuProps) {
     return (
         <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'flex-start' }}>
             <MainMenu
                 routePermissions={routePermissions}
-                managementMenuClick={managementMenuClick}
-                toolsMenuClick={toolsMenuClick}
             />
         </div>
     );
 }
 
-function DesktopHeader({ user, routePermissions, managementMenuClick, toolsMenuClick, profileMenuClick }: InnerHeaderProps) {
+function DesktopHeader({ user, routePermissions, profileMenuClick, onLoginClick }: InnerHeaderProps) {
 
     const classes = useStyles();
 
     return (
         <>
             <div className={classes.logo}>
-                <h1 style={{color: "black"}}>Aluga Fácil</h1>
-                {/* <img alt={'Aluga Fácil'} src={''} style={{ height: 'auto', width: '100%' }} /> */}
+                <img alt={'Aluga Fácil'} src={Logo} style={{ height: 'auto', width: '100%' }} />
             </div>
             <DesktopMainMenu
                 routePermissions={routePermissions}
-                managementMenuClick={managementMenuClick}
-                toolsMenuClick={toolsMenuClick}
             />
             <HeaderAccountInfo authUser={undefined} />
             <div style={{ justifyContent: 'flex-end', alignSelf: 'center' }}>
@@ -211,10 +201,10 @@ function DesktopHeader({ user, routePermissions, managementMenuClick, toolsMenuC
                         </Avatar> :
                         <DefaultButton
                             variant="contained"
-                            onClick={() => { }}
-                            style={{ marginRight: 10 }}                            
+                            onClick={onLoginClick}
+                            style={{ marginRight: 10 }}
                         >
-                            Login
+                            Entrar
                         </DefaultButton>
                 }
 
@@ -274,24 +264,9 @@ function MobileHeader({ user, profileMenuClick }: InnerHeaderProps) {
 function Header({ routePermissions }: HeaderProps) {
 
     const { enqueueSnackbar } = useSnackbar();
+    const history = useHistory();
 
     const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<HTMLElement | null>(null);
-    const [managementAnchorEl, setManagementAnchorEl] = React.useState<null | HTMLElement>(null);
-    const [toolsAnchorEl, setToolsAnchorEl] = React.useState<null | HTMLElement>(null);
-
-    const handleMenuManagementOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setManagementAnchorEl(event.currentTarget);
-    };
-    const handleMenuToolsOpen = (event: React.MouseEvent<HTMLElement>) => {
-        setToolsAnchorEl(event.currentTarget);
-    };
-
-    const handleMenuManagementClose = () => {
-        setManagementAnchorEl(null);
-    };
-    const handleMenuToolsClose = () => {
-        setToolsAnchorEl(null);
-    };
 
     const dispatch = useDispatch();
     // const { authUser, loggedIn } = useSelector(mapStateToProps);
@@ -302,7 +277,6 @@ function Header({ routePermissions }: HeaderProps) {
     function handleProfileMenuOpen(event: React.MouseEvent<HTMLElement>) {
         setUserMenuAnchorEl(event.currentTarget);
     }
-
     function handleProfileMenuClose() {
         setUserMenuAnchorEl(null);
     }
@@ -316,6 +290,10 @@ function Header({ routePermissions }: HeaderProps) {
         await AuthService.instance.logout();
         loading(false);
         dispatch(logoutAction());
+    }
+    
+    async function login() {
+        history.push('/login');        
     }
 
     const isMenuOpen = Boolean(userMenuAnchorEl);
@@ -331,9 +309,8 @@ function Header({ routePermissions }: HeaderProps) {
                         <DesktopHeader
                             user={authUser}
                             routePermissions={routePermissions}
-                            managementMenuClick={handleMenuManagementOpen}
-                            toolsMenuClick={handleMenuToolsOpen}
                             profileMenuClick={handleProfileMenuOpen}
+                            onLoginClick={login}
                         />
                         <ProfileMenu
                             authUser={authUser}
@@ -349,6 +326,7 @@ function Header({ routePermissions }: HeaderProps) {
                             user={authUser}
                             routePermissions={routePermissions}
                             profileMenuClick={handleProfileMenuOpen}
+                            onLoginClick={login}
                         />
                         <ProfileMenu
                             authUser={authUser}
@@ -360,8 +338,6 @@ function Header({ routePermissions }: HeaderProps) {
                             <Divider />
                             <MainMenu
                                 routePermissions={routePermissions}
-                                managementMenuClick={handleMenuManagementOpen}
-                                toolsMenuClick={handleMenuToolsOpen}
                                 onMenuClick={handleProfileMenuClose}
                             />
                             <Divider />
