@@ -26,22 +26,43 @@ export interface AuthResponse {
 	user?: User;
 }
 
-export interface Credentials{
+export interface Credentials {
 	mail: string;
 	password: string;
 }
 
-class LoginRequest {
-	constructor(public login: string, public senha: string) {
+interface TokenResult {
+	type: string;
+	payload: string
+}
+
+interface Token {
+	status: number;
+	result: TokenResult[]
+}
+
+interface LoginRequest {
+	credentials: Credentials;
+}
+
+class Claim {
+	constructor(public key: string, public value: string) {
+		this.key = key;
+		this.value = value;
+	}
+}
+
+class AuthRequest {
+	constructor(public login: string, public roles: string[], public claims: Claim[]) {
 		this.login = login;
-		this.senha = senha;
+		this.roles = roles;
+		this.claims = claims;
 	}
 }
 
 class SignUpRequest {
 	constructor(public fullName: string, public cpf: string, public income: number,
-		public registerType: string, public credentials: Credentials) 
-	{
+		public registerType: string, public credentials: Credentials) {
 		this.fullName = fullName;
 		this.cpf = cpf;
 		this.income = income;
@@ -120,8 +141,20 @@ export default class AuthService {
 		return token;
 	}
 
-	async login(email: string, password: string) {
-		var request = new LoginRequest(email, password);
+	async getUser(response: any): Promise<User> {
+		const { data } = await response.json();
+		const [first,] = data;
+		return first as User;
+	}
+
+	async getToken(response: any): Promise<Token> {
+		const data = await response.json();
+		return data as Token;
+	}
+
+	async login(mail: string, password: string) {
+		const credentials: Credentials = { mail, password };
+		const request: LoginRequest = { credentials };
 		var options = {
 			method: "POST",
 			headers: {
@@ -130,13 +163,18 @@ export default class AuthService {
 			},
 			body: JSON.stringify(request)
 		};
-		var token: AuthResponse;
 		var url = getBaseUrl('user') + 'credentials';
+		var url = "http://localhost:8080/user/find/credentials";
 		const response = await fetch(url, options);
 		if (response.ok) {
-			token = await response.json();
-			saveAuthToken(token);
-			var user = token.user;
+			const user: User = await this.getUser(response);
+			const result = await this.fetchAuthentication(user);
+			if (result.ok) {
+				const tkn: Token = await this.getToken(result);
+				let accessToken = tkn.result[0].payload;
+				let refreshToken = tkn.result[0].payload;
+				saveAuthToken({ accessToken, refreshToken, user })
+			}
 
 			// TODO: Pensar em como será feito o controle de permissões
 			// if (user) {
@@ -157,8 +195,7 @@ export default class AuthService {
 	}
 
 	async signUp(fullName: string, cpf: string, income: number,
-		registerType: string, mail: string, password: string) 
-	{
+		registerType: string, mail: string, password: string) {
 		const credentials: Credentials = { mail, password };
 		var request = new SignUpRequest(fullName, cpf, income, registerType, credentials);
 		var url = getBaseUrl('user') + 'create';
@@ -177,6 +214,32 @@ export default class AuthService {
 		else {
 			throw new Error("Unable to create user");
 		}
+	}
+
+	async fetchAuthentication(user: User) {
+		const claims: Claim[] = [];
+		claims.push(new Claim("mail", user.credentials.mail));
+		claims.push(new Claim("registerType", user.registerType));
+
+		const roles: string[] = [];
+		roles.push(user.registerType);
+
+		const request = new AuthRequest(
+			user.credentials.mail,
+			roles,
+			claims
+		);
+		var url = "http://localhost:8083/token/generate"
+		var options = {
+			method: "POST",
+			headers: {
+				Accept: "application/json",
+				"Content-Type": "application/json"
+			},
+			body: JSON.stringify(request)
+		};
+
+		return await fetch(url, options);
 	}
 
 	async authenticate(access_token: string) {
