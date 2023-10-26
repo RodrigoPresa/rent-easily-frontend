@@ -7,5 +7,5 @@ export default interface User {
     cpf: string;
     income: number;
     credentials: Credentials;
-    type: RegistrationType;
+    registerType: RegistrationType;
 }
