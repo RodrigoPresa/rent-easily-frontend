@@ -198,7 +198,8 @@ export default class AuthService {
 		registerType: string, mail: string, password: string) {
 		const credentials: Credentials = { mail, password };
 		var request = new SignUpRequest(fullName, cpf, income, registerType, credentials);
-		var url = getBaseUrl('user') + 'create';
+		// var url = getBaseUrl('user') + 'create';
+		var url = "http://localhost:8080/user/create"
 		var options = {
 			method: "POST",
 			headers: {
