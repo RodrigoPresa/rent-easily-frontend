@@ -1,21 +1,20 @@
-import React, { useEffect } from 'react';
-import * as Yup from 'yup';
-
 import { FormControl } from '@mui/material';
-
-import confirmation from '../../../components/ConfirmationDialog';
-import DefaultButton from '../../../components/FormControl/DefaultButton';
-import ErrorButton from '../../../components/FormControl/ErrorButton';
-import { Trans, translate, withTranslate } from '../../../components/Translate';
-import { objectEquals } from '../../../utils/util';
-import { WithTranslateProps } from '../../Translate/withTranslate';
-import FormContextProvider, { ChangeEvent, FormContextInterface, FormElement } from './FormContext';
+import React from 'react';
+import * as Yup from 'yup';
+import confirmation from '../../ConfirmationDialog';
+import DefaultButton from '../DefaultButton';
+import ErrorButton from '../ErrorButton';
+import { Trans } from '../../Translate';
 import useTranslate from '../../Translate/useTranslate';
+import FormContextProvider, { ChangeEvent, FormContextInterface } from './FormContext';
+import { objectEquals } from '../../../utils/util';
 
 export type FormErrors<T extends Record<string, any>> = { [P in keyof T]?: React.ReactNode };
 export type FormDirty<T extends Record<string, any>> = { [P in keyof T]?: boolean };
 
-export type FormValidationSchema<T extends Record<string, any>> = { [P in keyof T]?: Yup.AnySchema };
+type AnySchema = Yup.AnySchema<any, any, any>;
+
+export type FormValidationSchema<T extends Record<string, any>> = { [P in keyof T]?: AnySchema };
 
 function setFormError<T extends Record<string, any>, K extends keyof T & string>(errors: FormErrors<T>, field: K, errorMessage?: string) {
     errors[field] = errorMessage;
@@ -51,33 +50,87 @@ export async function validateSchema<T extends Record<string, any>>(values: T, v
     return errors;
 }
 
-export interface FormToperSaveUndoButtonsProps extends WithTranslateProps {
+export interface FormSaveUndoButtonsProps {
     blocked?: boolean;
     onUndo: (() => void) | undefined;
     isSubmitting?: boolean;
-    dirty: { [k: string]: boolean | undefined };
+    dirty: Record<string, boolean | undefined>;
 }
 
-class FormToperSaveUndoButtonsC extends React.Component<FormToperSaveUndoButtonsProps> {
+export function FormSaveUndoButtons(props: FormSaveUndoButtonsProps) {
 
-    constructor(props: FormToperSaveUndoButtonsProps) {
-        super(props);
+    const t = useTranslate();
+
+    const { blocked, isSubmitting, onUndo, dirty } = props;
+    const isDirty = Object.getOwnPropertyNames(dirty).length > 0;
+
+    return (
+        <>{isDirty ? <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
+            <DefaultButton type='submit' variant="contained" size='small' id="btnSave" disabled={blocked || isSubmitting}>
+                {onUndo ? <Trans translateKey="saveChanges" namespace="form" capitalize /> : <Trans translateKey="save" namespace="form" capitalize />}
+            </DefaultButton>
+            {onUndo && <ErrorButton variant="contained" size='small' id="btnUndo"
+                onClick={() => {
+                    if (!isDirty) {
+                        onUndo();
+                    } else {
+                        confirmation(undefined, {
+                            title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
+                            okLabel: t('yes', { capitalize: true }),
+                            cancelLabel: t('no', { capitalize: true }),
+                            onProceed: () => {
+                                onUndo();
+                            }
+                        });
+                    }
+                }}
+                style={{ marginLeft: 10 }}
+            >
+                <Trans translateKey="undoChanges" namespace="form" capitalize />
+            </ErrorButton>}
+        </FormControl> : null}</>
+    )
+}
+
+export interface FormFooterAllButtonsProps {
+    blocked?: boolean;
+    onUndo: (() => void) | undefined;
+    isSubmitting?: boolean;
+    dirty?: Record<string, boolean | undefined>;
+    onBack: () => void;
+    isDirty?: boolean;
+    form?: string;
+}
+
+export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
+
+    const t = useTranslate();
+
+    const { blocked, isSubmitting, onUndo, dirty, onBack, form } = props;
+    const isDirty = (dirty ? Object.getOwnPropertyNames(dirty).length > 0 : false) || props.isDirty;
+
+    const formId = form || 'general_form';
+
+    function handleSubmit(btnAction: string) {
+        let formElement = document.getElementById(formId);
+        if (formElement) {
+            formElement.setAttribute('submitType', btnAction);
+        }
     }
 
-    render() {
-        const { blocked, isSubmitting, onUndo, dirty, t } = this.props;
-        const isDirty = Object.getOwnPropertyNames(dirty).length > 0;
-
-        return (
-            <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-                <DefaultButton type='submit' variant="contained" size='small' id="btnSave" disabled={blocked || isSubmitting}>
-                    {onUndo ? <Trans translateKey="saveChanges" namespace="form" capitalize /> : <Trans translateKey="save" namespace="form" capitalize />}
-                </DefaultButton>
-                {onUndo && <ErrorButton variant="contained" size='small'
-                    onClick={() => {
-                        if (!isDirty) {
-                            onUndo();
-                        } else {
+    return (
+        <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
+            {isDirty &&
+                <>
+                    {/* <DefaultButton form={formId} onClick={() => handleSubmit('saveAndBack')} type={'submit'} variant="contained" size='small' id="btnSaveAndBack" name="btnSaveAndBack" value="btnSaveAndBack" disabled={blocked || isSubmitting}>
+                        Salvar e voltar
+                    </DefaultButton> */}
+                    <DefaultButton form={formId} onClick={() => handleSubmit('save')} style={{ marginLeft: 10 }} type={'submit'} variant="contained" size='small' id="btnSave" name="btnSave" value="btnSave" disabled={blocked || isSubmitting}>
+                        Salvar
+                    </DefaultButton>
+                    {onUndo && <ErrorButton variant="contained" size='small' id="btnUndo"
+                        disabled={blocked || isSubmitting}
+                        onClick={() => {
                             confirmation(undefined, {
                                 title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
                                 okLabel: t('yes', { capitalize: true }),
@@ -86,72 +139,6 @@ class FormToperSaveUndoButtonsC extends React.Component<FormToperSaveUndoButtons
                                     onUndo();
                                 }
                             });
-                        }
-                    }}
-                    style={{ marginLeft: 10 }}
-                >
-                    <Trans translateKey="undoChanges" namespace="form" capitalize />
-                </ErrorButton>}
-            </FormControl>
-        )
-    }
-}
-
-export const FormToperSaveUndoButtons = withTranslate<FormToperSaveUndoButtonsProps>()(FormToperSaveUndoButtonsC);
-
-export interface FormFooterAllButtonsProps {
-    blocked?: boolean;
-    onUndo?: (() => void) | undefined;
-    isSubmitting?: boolean;
-    dirty: { [k: string]: boolean | undefined };
-    onBack: () => void;
-    showSaveUndo: boolean;
-}
-
-export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
-    const t = useTranslate();
-    const { blocked, isSubmitting, onUndo, dirty, onBack, showSaveUndo } = props;
-    const isDirty = Object.getOwnPropertyNames(dirty).length > 0;
-    //const isDirty = (dirty ? Object.getOwnPropertyNames(dirty).length > 0 : false) || props.isDirty;
-    
-    useEffect(() => {
-        let overlay_editng = document.getElementById("overlay_editng");
-        if(overlay_editng){
-            if(isDirty === true || (showSaveUndo === true && onUndo)){
-                overlay_editng.style.display = 'block';
-            } else {
-                overlay_editng.style.display = 'none';
-            }
-        }
-        return () => {
-            if(overlay_editng){
-                overlay_editng.style.display = 'none';
-            }
-        }
-    }, [isDirty, showSaveUndo])
-
-    return (
-        <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
-            {showSaveUndo &&
-                <>
-                    <DefaultButton type='submit' variant="contained" size='small' id="btnSave" disabled={blocked || isSubmitting}>
-                        {onUndo ? <Trans translateKey="saveChanges" namespace="form" capitalize /> : <Trans translateKey="save" namespace="form" capitalize />}
-                    </DefaultButton>
-                    {onUndo && <ErrorButton variant="contained" size='small'
-                        disabled={blocked || isSubmitting}
-                        onClick={() => {
-                            if (!isDirty) {
-                                onUndo();
-                            } else {// transformar todos em class para usar t()
-                                confirmation(undefined, {
-                                    title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
-                                    okLabel: t('yes', { capitalize: true }),
-                                    cancelLabel: t('no', { capitalize: true }),
-                                    onProceed: () => {
-                                        onUndo();
-                                    }
-                                });
-                            }
                         }}
                         style={{ marginLeft: 10 }}
                     >
@@ -159,14 +146,11 @@ export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
                     </ErrorButton>}
                 </>
             }
-            {
-                //saveOrUndoChanges form
-            }
             <ErrorButton variant="contained" size='small' id="btnCancel"
-                disabled={!!(showSaveUndo && onUndo)}
-                title={!!(showSaveUndo && onUndo) ? t('saveOrUndoChanges', { capitalize: true, namespace: 'form' }) : ''}
+                disabled={!!(isDirty && onUndo && !blocked)}
+                title={!!(isDirty && onUndo) ? t('saveOrUndoChanges', { capitalize: true, namespace: 'form' }) : ''}
                 onClick={() => {
-                    if (!isDirty) {
+                    if (!isDirty || blocked) {
                         onBack();
                     } else {
                         confirmation(undefined, {
@@ -187,116 +171,143 @@ export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
     )
 }
 
-//export const FormFooterAllButtons = withTranslate<FormFooterAllButtonsProps>()(FormFooterAllButtonsC);
-
-export interface FormFooterButtonsProps extends WithTranslateProps {
+export interface FormFooterButtonsProps {
     blocked?: boolean;
     onCancel: () => void;
     isSubmitting?: boolean;
-    dirty: { [k: string]: boolean | undefined };
+    dirty?: Record<string, boolean | undefined>;
+    isDirty?: boolean;
+    form?: string;
 }
 
-class FormFooterButtonsC extends React.Component<FormFooterButtonsProps> {
+export function FormFooterButtons(props: FormFooterButtonsProps) {
+    const t = useTranslate();
 
-    constructor(props: FormFooterButtonsProps) {
-        super(props);
-    }
+    const { blocked, isSubmitting, onCancel, dirty, form } = props;
+    const isDirty = (dirty ? Object.getOwnPropertyNames(dirty).length > 0 : false) || props.isDirty;
 
-    render() {
-        const { blocked, isSubmitting, onCancel, dirty, t } = this.props;
-        const isDirty = Object.getOwnPropertyNames(dirty).length > 0;
-
-        return (
-            <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                <DefaultButton type='submit' variant="contained" size='small' id="btnSave" disabled={blocked || isSubmitting}>
-                    <Trans translateKey="save" namespace="form" capitalize />
-                </DefaultButton>
-                <ErrorButton variant="contained" size='small' id="btnCancel"
-                    onClick={() => {
-                        if (!isDirty) {
-                            onCancel();
-                        } else {
-                            confirmation(undefined, {
-                                title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
-                                okLabel: t('yes', { capitalize: true }),
-                                cancelLabel: t('no', { capitalize: true }),
-                                onProceed: () => {
-                                    onCancel();
-                                }
-                            });
-                        }
-                    }}
-                    style={{ marginLeft: 10 }}
-                >
-                    <Trans translateKey="cancel" namespace="form" capitalize />
-                </ErrorButton>
-            </FormControl>
-        )
-    }
+    return (
+        <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <DefaultButton type='submit' form={form} variant="contained" size='small' id="btnSave" disabled={blocked || isSubmitting}>
+                <Trans translateKey="save" namespace="form" capitalize />
+            </DefaultButton>
+            <ErrorButton variant="contained" size='small' id="btnCancel"
+                onClick={() => {
+                    if (!isDirty) {
+                        onCancel();
+                    } else {
+                        confirmation(undefined, {
+                            title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
+                            okLabel: t('yes', { capitalize: true }),
+                            cancelLabel: t('no', { capitalize: true }),
+                            onProceed: () => {
+                                onCancel();
+                            }
+                        });
+                    }
+                }}
+                style={{ marginLeft: 10 }}
+            >
+                <Trans translateKey="cancel" namespace="form" capitalize />
+            </ErrorButton>
+        </FormControl>
+    )
 }
 
-export const FormFooterButtons = withTranslate<FormFooterButtonsProps>()(FormFooterButtonsC);
-
-export interface FormFooterBackButtonsProps extends WithTranslateProps {
+export interface FormFooterBackButtonsProps {
     blocked?: boolean;
     onBack: () => void;
     isSubmitting?: boolean;
-    dirty: { [k: string]: boolean | undefined };
+    dirty: Record<string, boolean | undefined>;
 }
 
-class FormFooterBackButtonsC extends React.Component<FormFooterBackButtonsProps> {
+export function FormFooterBackButtons(props: FormFooterBackButtonsProps) {
 
-    constructor(props: FormFooterBackButtonsProps) {
-        super(props);
-    }
+    const t = useTranslate();
 
-    render() {
-        const { blocked, isSubmitting, onBack, dirty, t } = this.props;
-        const isDirty = Object.getOwnPropertyNames(dirty).length > 0;
+    const { blocked, isSubmitting, onBack, dirty } = props;
+    const isDirty = Object.getOwnPropertyNames(dirty).length > 0;
 
-        return (
-            <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-                <ErrorButton variant="contained" size='small' id="btnCancel"
-                    onClick={() => {
-                        if (!isDirty) {
-                            onBack();
-                        } else {
+    return (
+        <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+            <ErrorButton variant="contained" size='small' id="btnCancel"
+                onClick={() => {
+                    if (!isDirty) {
+                        onBack();
+                    } else {
+                        confirmation(undefined, {
+                            title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
+                            okLabel: t('yes', { capitalize: true }),
+                            cancelLabel: t('no', { capitalize: true }),
+                            onProceed: () => {
+                                onBack();
+                            }
+                        });
+                    }
+                }}
+                style={{ marginLeft: 10 }}
+            >
+                <Trans translateKey="back" capitalize />
+            </ErrorButton>
+        </FormControl>
+    )
+}
+
+export interface FormFooterTestButtonsProps {
+    onConfirm: () => void;
+    onBack: () => void;
+    isConfirmBtnVisible: boolean;
+}
+
+export function FormFooterTestButtons(props: FormFooterTestButtonsProps) {
+
+    const t = useTranslate();
+
+    const { onBack, onConfirm, isConfirmBtnVisible } = props;
+
+    return (
+        <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
+            <>
+                {
+                    isConfirmBtnVisible &&
+                    <DefaultButton variant="contained" size='small' id="btnConfirm"
+                        onClick={() => {
                             confirmation(undefined, {
-                                title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
+                                title: t('confirmEndTest', { capitalize: true, namespace: 'tests' }),
                                 okLabel: t('yes', { capitalize: true }),
                                 cancelLabel: t('no', { capitalize: true }),
                                 onProceed: () => {
-                                    onBack();
+                                    onConfirm();
                                 }
                             });
-                        }
-                    }}
-                    style={{ marginLeft: 10 }}
-                >
-                    <Trans translateKey="back" capitalize />
-                </ErrorButton>
-            </FormControl>
-        )
-    }
+                        }}
+                        style={{ marginLeft: 10 }}
+                    >
+                        <Trans translateKey="endTest" namespace="tests" capitalize />
+                    </DefaultButton>
+                }
+            </>
+            <ErrorButton variant="contained" size='small' id="btnCancel"
+                onClick={() => { onBack(); }}
+                style={{ marginLeft: 10 }}
+            >
+                <Trans translateKey="back" capitalize />
+            </ErrorButton>
+        </FormControl>
+    )
 }
-
-export const FormFooterBackButtons = withTranslate<FormFooterBackButtonsProps>()(FormFooterBackButtonsC);
-
-// const FunctionTrans = (props) => {
-//     return props.t;
-// }
-// export const TransFormValidation = withTranslate({ namespace: 'form.validation' })(FunctionTrans);
-
 
 export interface FormProps<T extends Record<string, any>> {
     style?: React.CSSProperties;
     initialValues: T;
-    onSubmit: (values: T, dirty: FormDirty<T>, errors?: FormErrors<T>) => Promise<void> | void;
+    onSubmit: (values: T, dirty: FormDirty<T>, errors?: FormErrors<T>, submitType?: string | null) => Promise<void> | void;
+    onChange?: (changed: boolean) => any;
     validationSchema?: FormValidationSchema<T>;
     enableReinitialize?: boolean;
     validate?: (values: T) => Promise<FormErrors<T>>;
     postValidation?: (values: T) => Promise<FormErrors<T>>;
     children: React.FunctionComponent<FormContextInterface<T>>;
+    id?: string;
 }
 
 export interface FormState<T extends Record<string, any>> {
@@ -325,34 +336,22 @@ export default class Form<T extends Record<string, any>> extends React.Component
         this.onFormReset = this.onFormReset.bind(this);
         this.setFieldError = this.setFieldError.bind(this);
         this.setErrors = this.setErrors.bind(this);
+        this.reset = this.reset.bind(this);
         this.validateField = this.validateField.bind(this);
         this.setFieldValue = this.setFieldValue.bind(this);
         this.clearField = this.clearField.bind(this);
         this.setValues = this.setValues.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleChangeNumber = this.handleChangeNumber.bind(this);
-        this.onCloseWindow = this.onCloseWindow.bind(this);
-    }
-
-    onCloseWindow(event: BeforeUnloadEvent) {
-        let btnCancel = window.document.getElementById('btnCancel');
-        if(btnCancel && btnCancel.getAttribute('disabled') !== null){
-            event.preventDefault(); // Cancela o evento padrão do navegador
-            event.returnValue = ''; // Define uma mensagem vazia (funciona em alguns navegadores)
-        
-            // Exibe a mensagem personalizada
-            return 'É possível que as alterações feitas não sejam salvas.';
-        }
+        this.handleChangeFloat = this.handleChangeFloat.bind(this);
     }
 
     componentDidMount() {
         this.mounted = true;
-        window.addEventListener('beforeunload', this.onCloseWindow);
     }
 
     componentWillUnmount() {
         this.mounted = false;
-        window.removeEventListener('beforeunload', this.onCloseWindow);
     }
 
     async componentDidUpdate(prevProps: FormProps<T>, prevState: FormState<T>) {
@@ -392,18 +391,34 @@ export default class Form<T extends Record<string, any>> extends React.Component
         return e;
     }
 
-    async onFormReset(event: React.FormEvent<HTMLFormElement>) {
-        const { initialValues } = this.props;
+    async reset() {
+        const { initialValues, onChange } = this.props;
         await this.setStateAsync({ values: initialValues, dirty: {}, errors: {} });
+        onChange?.call(this, false);
+    }
+
+    async onFormReset(event: React.FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        event.stopPropagation();
+        await this.reset();
     }
 
     async formOnSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault();
         event.stopPropagation();
 
-        var btnSubmit = event.currentTarget.querySelector('button[type=submit]');
-        if (btnSubmit) {
-            btnSubmit.setAttribute('disabled', 'true');
+        let submitType = event.currentTarget.getAttribute('submitType');
+
+        var btnsSubmit = document.querySelectorAll('button[type=submit]');
+        if (btnsSubmit) {
+            btnsSubmit.forEach((btnSubmit) => {
+                btnSubmit.setAttribute('disabled', 'true');
+            });
+        }
+
+        var btnUndo = document.getElementById('btnUndo');
+        if (btnUndo) {
+            btnUndo.setAttribute('disabled', 'true');
         }
 
         const { errors, values, dirty } = this.state;
@@ -429,13 +444,18 @@ export default class Form<T extends Record<string, any>> extends React.Component
         }
         await this.setStateAsync({ errors: finalErrors, dirty: d });
         if (typeof onSubmit === 'function') {
-            await Promise.resolve(onSubmit(values, d, Object.keys(finalErrors).length > 0 ? finalErrors : undefined));
+            await Promise.resolve(onSubmit(values, d, Object.keys(finalErrors).length > 0 ? finalErrors : undefined, submitType));
         }
 
         window.setTimeout(async () => {
             await this.setStateAsync({ isSubmitting: false });
-            if (btnSubmit) {
-                btnSubmit.removeAttribute('disabled');
+            if (btnsSubmit) {
+                btnsSubmit.forEach((btnSubmit) => {
+                    btnSubmit.removeAttribute('disabled');
+                });
+                if (btnUndo) {
+                    btnUndo.removeAttribute('disabled');
+                }
             }
         }, 500);
     }
@@ -486,6 +506,7 @@ export default class Form<T extends Record<string, any>> extends React.Component
     }
 
     async setValues(vals: Partial<T>) {
+        const { onChange } = this.props;
         const { values, dirty } = this.state;
         const keys = Object.keys(vals) as (keyof T)[];
         var v = Object.assign({}, values, vals);
@@ -495,6 +516,7 @@ export default class Form<T extends Record<string, any>> extends React.Component
         });
         await this.setValuesErrors(v);
         await this.setStateAsync({ values: v, dirty: d });
+        onChange?.call(this, true);
     }
 
     async setValueError<K extends keyof T & string>(field: K, value: any) {
@@ -515,10 +537,12 @@ export default class Form<T extends Record<string, any>> extends React.Component
     }
 
     async setFieldValue<K extends keyof T & string>(field: K, value: any) {
+        const { onChange } = this.props;
         const { values, dirty } = this.state;
         var v = Object.assign({}, values, { [field]: value });
         this.setValueError(field, value);
         await this.setStateAsync({ values: v, dirty: { ...dirty, [field]: true } });
+        onChange?.call(this, true);
     }
 
     async clearField<K extends keyof T & string>(field: K, value?: any) {
@@ -561,12 +585,29 @@ export default class Form<T extends Record<string, any>> extends React.Component
         }
     }
 
+    async handleChangeFloat<K = any>(event: ChangeEvent<K>) {
+        if (event.target !== null) {
+            const { name, value } = event.target;
+            const field = name;
+            const re = /^[0-9]+([.][0-9]+)?$/;
+            if (field) {
+                if (typeof value === 'string' && (re.test(value) || value === '')) {
+                    var numValue = value === '' ? NaN : Number(value);
+                    await this.setFieldValue(field, isNaN(numValue) ? null : numValue);
+                } else if (typeof value === 'number') {
+                    await this.setFieldValue(field, isNaN(value) ? null : value);
+                }
+            }
+        }
+    }
+
     render() {
-        const { style, children, initialValues } = this.props;
+        const { style, children, initialValues, id } = this.props;
         var s = style || {};
         const { values, errors, isSubmitting, dirty } = this.state;
         return (
             <form
+                id={id || 'general_form'}
                 autoComplete='off'
                 onSubmit={this.formOnSubmit}
                 onReset={this.onFormReset}
@@ -580,15 +621,17 @@ export default class Form<T extends Record<string, any>> extends React.Component
                         clearField: this.clearField,
                         handleChange: this.handleChange,
                         handleChangeNumber: this.handleChangeNumber,
+                        // handleChangeFloat: this.handleChangeFloat,
                         setValues: this.setValues,
                         setErrors: this.setErrors,
+                        // reset: this.reset,
                         errors,
                         dirty,
                         isSubmitting
                     }}>
                     {children}
                 </FormContextProvider>
-            </form>
+            </form >
         );
     }
 }

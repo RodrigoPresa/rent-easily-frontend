@@ -71,12 +71,6 @@ class SignUpRequest {
 	}
 }
 
-class RefreshRequest {
-	constructor(public refreshToken: string) {
-		this.refreshToken = refreshToken;
-	}
-}
-
 let _instance: AuthService;
 
 export default class AuthService {
@@ -95,52 +89,13 @@ export default class AuthService {
 		this.login = this.login.bind(this);
 		this.logout = this.logout.bind(this);
 		this.getAccessToken = this.getAccessToken.bind(this);
-		this.getRefreshToken = this.getRefreshToken.bind(this);
 	}
 
 	getAccessToken() {
 		var data = getAuthToken();
 		return data !== null ? data.accessToken : null;
 	}
-
-	getRefreshToken() {
-		var data = getAuthToken();
-		return data !== null ? data.refreshToken : null;
-	}
-
-	async refreshToken() {
-		await this.lock.acquire();
-		var refresh_token = this.getRefreshToken();
-		if (!refresh_token) {
-			this.lock.release();
-			return Promise.resolve(null);
-		}
-		var url = getBaseUrl('auth') + 'refreshToken/';
-		var request = new RefreshRequest(refresh_token);
-		var options = {
-			method: "POST",
-			headers: {
-				Accept: "application/json",
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify(request)
-		};
-		var token: AuthResponse | null;
-		const response = await fetch(url, options);
-		if (response.ok) {
-			token = await response.json();
-			if (token) {
-				saveAuthToken(token);
-			}
-		} else {
-			clearAuthToken();
-			console.error("Invalid Refresh Token");
-			token = null;
-		}
-		this.lock.release();
-		return token;
-	}
-
+		
 	async getUser(response: any): Promise<User> {
 		const { data } = await response.json();
 		const [first,] = data;
@@ -163,7 +118,7 @@ export default class AuthService {
 			},
 			body: JSON.stringify(request)
 		};
-		var url = getBaseUrl('user') + 'credentials';
+		//var url = getBaseUrl('user') + 'credentials';
 		var url = "http://localhost:8080/user/find/credentials";
 		const response = await fetch(url, options);
 		if (response.ok) {

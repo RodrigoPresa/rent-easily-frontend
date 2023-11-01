@@ -19,7 +19,7 @@
     "@types/react-dom": "^17.0.0",
     "date-fns": "^2.29.3",
     "moment": "^2.29.4",
-    "notistack": "^3.0.1",
+    "notistack": "^2.0.8",
     "queue-typescript": "^1.0.1",
     "react": "^17.0.0",
     "react-breadcrumbs-dynamic": "^1.2.1",

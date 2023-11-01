@@ -1,9 +1,10 @@
-import { Route, RouteChildrenProps, Switch } from "react-router-dom";
+import { Redirect, Route, RouteChildrenProps, Switch } from "react-router-dom";
 import User from "../../../model/User";
 import React from "react";
 import { connect } from "react-redux";
 import AdvertisementListPage from "./AdvertisementListPage";
-
+import AdvertisementEditRootPage from "./AdvertisementEditRootPage";
+import AdvertisementViewPage from "./AdvertisementViewPage";
 
 interface AdvertisementPageProps extends RouteChildrenProps {
     loggedIn: boolean,
@@ -24,11 +25,16 @@ class AdvertisementPage extends React.Component<AdvertisementPageProps, Advertis
 
         if (match === null)
             return null;
-        
+
         return (
             <>
                 <Switch>
+                    <Route path={match.url + "/view/:id"} exact component={AdvertisementViewPage} />
                     <Route path={match.url + "/"} exact component={AdvertisementListPage} />
+                    <Route exact path={match?.url + "/add"} component={AdvertisementPage} />
+                    <Route exact path={match?.url + "/:id"} component={AdvertisementEditRootPage} />
+                    <Route exact path={match?.url + "/:id/edit"} component={AdvertisementEditRootPage} />
+                    <Route render={() => <Redirect to={match?.url || ""} />} />
                 </Switch>
             </>
         );

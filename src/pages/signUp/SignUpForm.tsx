@@ -1,4 +1,4 @@
-import { Button, FormControl, FormHelperText, Paper, Theme } from '@mui/material';
+import { Button, FormControl, FormHelperText, Menu, MenuItem, Paper, Select, SelectChangeEvent, Theme } from '@mui/material';
 import TextField from '@mui/material/TextField';
 import { withTheme } from "@mui/styles";
 import React, { Component } from "react";
@@ -68,7 +68,7 @@ class SignUpForm extends Component<SignUpFormProps, SignUpFormState> {
         });
     }
 
-    onRegisterTypeChangeHandler(ev: React.ChangeEvent<HTMLInputElement>) {
+    onRegisterTypeChangeHandler(ev: SelectChangeEvent<string>) {
         var value = ev.target.value;
         this.setState({
             registerType: value
@@ -139,20 +139,19 @@ class SignUpForm extends Component<SignUpFormProps, SignUpFormState> {
                         size='small'
                         required
                     />
-                    <SelectSearch<string>
+                    <Select
                         name="registerType"
                         label={"Tipo de cadastro"}
-                        onChangeHandle={this.onRegisterTypeChangeHandler}
-
-                        options={[
-                            { value: "lesse", label: "Locador" },
-                            { value: "lessor", label: "Locatário" }
-                        ]}
+                        onChange={this.onRegisterTypeChangeHandler}
+                        variant="standard"
                         value={registerType || "lesse"}
-                        margin="normal"
+                        style={{margin: "20px 0 10px 0"}}
                         required
                         fullWidth
-                    />
+                    >
+                        <MenuItem key="menuitem-lesse" value="lesse">Locatário</MenuItem>
+                        <MenuItem key="menuitem-lessor" value="lessor">Locador</MenuItem>
+                    </Select>
                     <TextField
                         label='E-Mail'
                         onChange={this.onEmailChangeHandler}

@@ -170,9 +170,9 @@ class App extends Component<AppProps, AppState> {
 
     render() {
         const { loaded } = this.state;
-        if (loaded === false) {
-            return <Loading />;
-        }
+        // if (loaded === false) {
+        //     return <Loading />;
+        // }
         return (
             <div className="App">
                 <StyledEngineProvider injectFirst>

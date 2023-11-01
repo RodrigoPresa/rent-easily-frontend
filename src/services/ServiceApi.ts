@@ -11,19 +11,6 @@ export interface FetchOptions {
     headers?: { [key: string]: string }
 }
 
-export async function refreshTokenAndRetry(url: string, options?: FetchOptions) {
-    console.log('refreshTokenAndRetry')
-    if (!options) {
-        options = {};
-    }
-    const tokens = await AuthService.instance.refreshToken();
-    if (tokens) {
-        options.headers = getRequestHeader(tokens.accessToken);
-        return await fetch(url, options);
-    }
-    return null;
-}
-
 export function getRequestHeader(access_token: string | null, useAuthentication: boolean = true): Record<string, string> {
     var header = {
         'Accept': 'application/json',
@@ -51,9 +38,9 @@ export async function promiseRequest(url: string, method?: METHOD, body?: Object
         try {
             var access_token = AuthService.instance.getAccessToken();
 
-            if (!access_token && useAuthentication) {
-                throw new Error(`Não autorizado ${url}`);
-            }
+            // if (!access_token && useAuthentication) {
+            //     throw new Error(`Não autorizado ${url}`);
+            // }
             var options: FetchOptions = {
                 method: method || 'GET',
                 headers: getRequestHeader(access_token, useAuthentication)
@@ -65,14 +52,7 @@ export async function promiseRequest(url: string, method?: METHOD, body?: Object
             var response = await fetch(url, options);
 
             if (response.status === 401) {
-                try {
-                    const refreshResponse = await refreshTokenAndRetry(url, options);
-                    if (refreshResponse) {
-                        response = refreshResponse;
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
+                    console.error("Não autorizado");
             }
 
             if (response.status === 204) {

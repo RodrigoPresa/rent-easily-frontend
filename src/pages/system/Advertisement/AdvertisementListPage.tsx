@@ -1,6 +1,6 @@
 import React from "react";
 import User from "../../../model/User";
-import { RouteChildrenProps } from "react-router-dom";
+import { Link, RouteChildrenProps } from "react-router-dom";
 import Advertisement from "../../../model/Advertisement";
 import { ServiceApi } from "../../../services/ServiceApi";
 import { useSnackbar } from 'notistack';
@@ -9,6 +9,44 @@ import { connect } from "react-redux";
 import { RootState } from "../../../reducer";
 import { WithTranslateProps, withTranslate } from "../../../components/Translate/withTranslate";
 import { Trans } from "../../../components/Translate";
+import AdvertisementView from "./AdvertisementView";
+import Panel from "../../../components/Panel";
+import PanelBodyContent from "../../../components/Panel/PanelBodyContent";
+import { Grid } from "@mui/material";
+import { hi } from "date-fns/locale";
+import Property from "../../../model/Property";
+import { get } from "http";
+
+const ads = [
+    {
+        id: 1,
+        imageUrl: "https://images.adsttc.com/media/images/5f90/e509/63c0/1779/0100/010e/newsletter/3.jpg?1603331288",
+        title: "Imóvel 1",
+        address: "Rua 1",
+        rentAmount: 1000
+    },
+    {
+        id: 2,
+        imageUrl: "https://casacor.abril.com.br/wp-content/uploads/sites/7/2022/01/Casa-Liu-Raiz-Arquitetura-Foto-Leonardo-Giantomasi-2.jpg?quality=90&strip=info",
+        title: "Imóvel 2",
+        address: "Rua 2",
+        rentAmount: 1200
+    },
+    {
+        id: 3,
+        imageUrl: "https://vgprojetos.com/wp-content/uploads/2022/09/P11-IMG-3.jpg",
+        title: "Imóvel 3",
+        address: "Rua 3",
+        rentAmount: 1250
+    },
+    {
+        id: 4,
+        imageUrl: "https://casademadeira.com.br/wp-content/uploads/2023/08/casa-de-madeira-dallas-5.jpg",
+        title: "Imóvel 4",
+        address: "Rua 4",
+        rentAmount: 950
+    },
+];
 
 
 export interface AdvertisementListPageProps extends RouteChildrenProps, WithTranslateProps {
@@ -18,29 +56,25 @@ export interface AdvertisementListPageProps extends RouteChildrenProps, WithTran
 
 export interface AdvertisementListPageState {
     list: Advertisement[];
+    propertyList: Property[];
+    favoriteStatus: { [key: number]: boolean };
     page: number;
     count: number;
     rowsPerPage: number;
     searchText: string;
 }
 
-interface AdvertisementRow {
-    id: number;
-    imageUrl: string;
-    title: string;
-    address: string;
-    description: string;
-    price: number;
-}
-
 class AdvertisementListPage extends React.Component<AdvertisementListPageProps, AdvertisementListPageState> {
 
     private service: ServiceApi<Advertisement>;
+    private propertyService: ServiceApi<Property>;
 
     constructor(props: AdvertisementListPageProps) {
         super(props);
         this.state = {
             list: [],
+            propertyList: [],
+            favoriteStatus: {},
             page: 0,
             count: 0,
             rowsPerPage: 25,
@@ -48,10 +82,9 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
         }
 
         this.service = new ServiceApi<Advertisement>('advertisement');
+        this.propertyService = new ServiceApi<Property>('property');
 
-        this.onPageChange = this.onPageChange.bind(this);
-        this.onRowsPerPageChange = this.onRowsPerPageChange.bind(this);
-        this.onSearchChange = this.onSearchChange.bind(this);
+        this.onFavoriteClickHandler = this.onFavoriteClickHandler.bind(this);
     }
 
     async componentDidMount() {
@@ -61,82 +94,75 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
 
     async reload(searchText: string, page: number, rowsPerPage: number) {
         const list = await this.getAdvertisements(searchText, page, rowsPerPage);
-        this.setState({ list });
+        const propertyList = await this.getAdvertisements(searchText, page, rowsPerPage);
+        this.setState({ list, });
     }
 
     getAdvertisements(searchText: string, page: number, rowsPerPage: number): Promise<Advertisement[]> {
         return this.service.getList();
     }
-
-    onRowClick(advertisement: AdvertisementRow) {
-        const { match, history } = this.props;
-        if (!match || !advertisement) return;
-        history.push(`${match.url}/${advertisement.id}`);
+    
+    getProperties(searchText: string, page: number, rowsPerPage: number): Promise<Property[]> {
+        return this.propertyService.getList();
     }
 
-    getAdvertisementRow(advertisement: Advertisement): AdvertisementRow {
-        return {
-            id: advertisement.id,
-            imageUrl: "", // imagem do imóvel
-            title: "", // talvez adicionar um campo de título no anúncio
-            address: "", // adicionar um campo de endereço no anúncio
-            description: advertisement.information,
-            price: advertisement.rentAmount
-        }
+    getPropertyAddress(propertyId: number): string {
+        const property = this.state.propertyList.find(p => p.id === propertyId);
+        const address = property?.address;
+
+        //if (!address) return '';
+
+        // return `${address.street}, ${address.streetNumber} - ${address.neighborhood}, ${address.city}/${address.state}`;
+        return `Rua ${propertyId}, 12${propertyId} - Bairro, Cidade/UF`;
     }
 
-    async onPageChange(page: number) {
-        const { searchText, rowsPerPage } = this.state;
-        this.setState({ searchText, page, rowsPerPage });
-        await this.reload(searchText, page, rowsPerPage);
-    }
+    onFavoriteClickHandler(advertisementId: number) {
+        const { authUser, history } = this.props;
 
-    async onRowsPerPageChange(rowsPerPage: number) {
-        const { searchText } = this.state;
-        this.setState({ searchText, page: 0, rowsPerPage });
-        await this.reload(searchText, 0, rowsPerPage);
-    }
+        if (!authUser) history.push('/login');
 
-    async onSearchChange(searchTextNew: string) {
-        const { rowsPerPage, page, searchText } = this.state;
-        if (searchText === searchTextNew) return;
-        this.setState({ searchText: searchTextNew, page: 0, rowsPerPage });
-        await this.reload(searchTextNew, 0, rowsPerPage);
+        this.setState(prevState => {
+            const favoriteStatus = { ...prevState.favoriteStatus };
+            favoriteStatus[advertisementId] = !favoriteStatus[advertisementId];
+            return { favoriteStatus };
+        });
     }
 
     render() {
-        const { list, page, count, rowsPerPage, searchText } = this.state;
+        const { list, propertyList, favoriteStatus, page, count, rowsPerPage, searchText } = this.state;
         const { authUser } = this.props;
-
+        
         // const editAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Update}`);
         // const addAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Create}`);
         // const deleteAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Delete}`);
 
         return (
             <>
-                {/* <TableList<AdvertisementRow>
-                    title="Anúncios"
-                    columns={[
-                        { field: 'id', visible: false, width: 30 },
-                        { field: 'imageUrl', value: "" },
-                        { field: 'title', value: "Tito"},
-                        { field: 'address', value: "Endereço"},
-                        { field: 'description', value: "Descrição"},
-                        { field: 'price', value: "Preço"},
-                    ]}
-                    rows={list.map(a => this.getAdvertisementRow(a))}
-                    selectableRow={true}
-                    onRowClick={(a) => this.onRowClick(a)}
-                    onRefreshClick={() => this.reload(searchText, page, rowsPerPage)}
-                    onPageChange={(a) => { this.onPageChange(a) }}
-                    onRowsPerPageChange={(a) => { this.onRowsPerPageChange(a) }}
-                    onSearch={(a) => { this.onSearchChange(a) }}
-                    page={page}
-                    totalCount={count}
-                    rowsPerPage={rowsPerPage}
-                /> */}
-
-                <div>anúncio</div>
+                <Panel
+                    panelHeaderTitle=""
+                >
+                    <PanelBodyContent>
+                        <Grid container direction="row" alignItems="center">
+                            {ads !== null ? ads.map(ad => ( //list !== null ? list.map(ad => (
+                                <React.Fragment key={ad.id}>
+                                    <Grid item xs={6} sm={6} md={4} lg={4} >
+                                        <AdvertisementView
+                                            id={ad.id}
+                                            address={this.getPropertyAddress(ad.id)}
+                                            imageUrl={ads[Math.floor(Math.random() * 4)].imageUrl}
+                                            price={ad.rentAmount}
+                                            title={ad.title} //propertyList.find(p => p.id === ad.id)?.description || ''
+                                            onFavoriteClick={() => this.onFavoriteClickHandler(ad.id)}
+                                            isFavorite={favoriteStatus[ad.id] || false}
+                                        />
+                                    </Grid>
+                                </React.Fragment>
+                            )) :
+                                <div style={{ textAlign: 'center' }}>Nenhum anúncio disponível</div>
+                            }
+                        </Grid>
+                    </PanelBodyContent>
+                </Panel >
             </>
         );
     }
