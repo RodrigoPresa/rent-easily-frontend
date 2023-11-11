@@ -55,7 +55,7 @@ const useStyles = makeStyles(theme => ({
         justifyContent: 'left',
         alignItems: 'center',
         width: '260px',
-        //width: '25%',
+        cursor: 'pointer',
         [theme.breakpoints.down('lg')]: {
             display: 'none',
         }
@@ -183,10 +183,15 @@ function DesktopMainMenu({ routePermissions }: MainMenuProps) {
 function DesktopHeader({ user, routePermissions, profileMenuClick, onLoginClick }: InnerHeaderProps) {
 
     const classes = useStyles();
+    const history = useHistory();
+
+    const handleLogoClick = () => {
+        history.push('/');
+    }
 
     return (
         <>
-            <div className={classes.logo}>
+            <div className={classes.logo} onClick={handleLogoClick}>
                 <img alt={'Aluga Fácil'} src={Logo} style={{ height: 'auto', width: '100%' }} />
             </div>
             <DesktopMainMenu
@@ -269,8 +274,7 @@ function Header({ routePermissions }: HeaderProps) {
     const [userMenuAnchorEl, setUserMenuAnchorEl] = useState<HTMLElement | null>(null);
 
     const dispatch = useDispatch();
-    // const { authUser, loggedIn } = useSelector(mapStateToProps);
-    const authUser = undefined;
+    const { authUser, loggedIn } = useSelector(mapStateToProps);
 
     const classes = useStyles();
 
@@ -297,8 +301,6 @@ function Header({ routePermissions }: HeaderProps) {
     }
 
     const isMenuOpen = Boolean(userMenuAnchorEl);
-
-    //if (!authUser) return null;
 
     return (
         <div className={classes.root} >

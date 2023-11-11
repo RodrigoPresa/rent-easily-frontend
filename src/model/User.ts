@@ -6,6 +6,6 @@ export default interface User {
     fullName: string;
     cpf: string;
     income: number;
-    credentials: Credentials;
     registerType: RegistrationType;
+    credentials: Credentials;
 }

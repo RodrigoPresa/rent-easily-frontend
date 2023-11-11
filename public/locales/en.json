@@ -61,6 +61,7 @@
         "addressNumber": "number",
         "addTitle": "{{element}} Registration",
         "advanced": "advanced",
+        "advertisement": "advertisement",
         "all": "all",
         "anElementWithThisCpfHasAlreadyBeenAdded": "An {{element}} with this CPF has already been added to the list",
         "areaCode": "area code",
@@ -234,8 +235,8 @@
         "logoSizeMsgValidation": "The logo must have a maximum of 5 MB",
         "removeFile": "remove file",
         "selectFile": "select file"
-      },
-      "months": {
+    },
+    "months": {
         "january": "january",
         "february": "february",
         "march": "march",
@@ -248,7 +249,7 @@
         "october": "october",
         "november": "november",
         "december": "december"
-      },
+    },
     "person": {
         "birthDate": "birth date",
         "single": "single",
@@ -271,9 +272,9 @@
         "deleteConfirmation": "Do you really want to delete this(these) item(s)?"
     },
     "user": {
-      "errorDelete1": "You do not have permission to delete selected Users!",
-      "errorDelete2": "You are not allowed to delete some of the selected Users!",
-      "errorDelete3": "You do not have permission to delete the selected User!"
+        "errorDelete1": "You do not have permission to delete selected Users!",
+        "errorDelete2": "You are not allowed to delete some of the selected Users!",
+        "errorDelete3": "You do not have permission to delete the selected User!"
     },
     "weekDays": {
         "monday": "monday",
@@ -284,5 +285,5 @@
         "saturday": "saturday",
         "sunday": "sunday",
         "holiday": "holiday"
-      }
+    }
 }

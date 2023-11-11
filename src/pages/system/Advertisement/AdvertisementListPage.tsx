@@ -2,7 +2,7 @@ import React from "react";
 import User from "../../../model/User";
 import { Link, RouteChildrenProps } from "react-router-dom";
 import Advertisement from "../../../model/Advertisement";
-import { ServiceApi } from "../../../services/ServiceApi";
+import { ResponseData, ServiceApi } from "../../../services/ServiceApi";
 import { useSnackbar } from 'notistack';
 import TableList from "../../../components/TableList/TableList";
 import { connect } from "react-redux";
@@ -16,6 +16,7 @@ import { Grid } from "@mui/material";
 import { hi } from "date-fns/locale";
 import Property from "../../../model/Property";
 import { get } from "http";
+import PropertyAddress from "../../../model/PropertyAddress";
 
 const ads = [
     {
@@ -51,7 +52,6 @@ const ads = [
 
 export interface AdvertisementListPageProps extends RouteChildrenProps, WithTranslateProps {
     authUser?: User;
-    list: Advertisement[];
 }
 
 export interface AdvertisementListPageState {
@@ -94,26 +94,24 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
 
     async reload(searchText: string, page: number, rowsPerPage: number) {
         const list = await this.getAdvertisements(searchText, page, rowsPerPage);
-        const propertyList = await this.getAdvertisements(searchText, page, rowsPerPage);
-        this.setState({ list, });
+        const propertyList = await this.getProperties(searchText, page, rowsPerPage);
+        this.setState({ list, propertyList});
     }
 
     getAdvertisements(searchText: string, page: number, rowsPerPage: number): Promise<Advertisement[]> {
-        return this.service.getList();
+        return this.service.getList().then(list => (list.data));
     }
     
     getProperties(searchText: string, page: number, rowsPerPage: number): Promise<Property[]> {
-        return this.propertyService.getList();
+        return this.propertyService.getList().then(list => (list.data));
     }
 
-    getPropertyAddress(propertyId: number): string {
-        const property = this.state.propertyList.find(p => p.id === propertyId);
+    getPropertyAddress(propertyId: number): PropertyAddress | undefined {
+        const { propertyList } = this.state;
+        const property = propertyList.find(p => p.id === propertyId);
         const address = property?.address;
 
-        //if (!address) return '';
-
-        // return `${address.street}, ${address.streetNumber} - ${address.neighborhood}, ${address.city}/${address.state}`;
-        return `Rua ${propertyId}, 12${propertyId} - Bairro, Cidade/UF`;
+        return address;
     }
 
     onFavoriteClickHandler(advertisementId: number) {
@@ -143,15 +141,14 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
                 >
                     <PanelBodyContent>
                         <Grid container direction="row" alignItems="center">
-                            {ads !== null ? ads.map(ad => ( //list !== null ? list.map(ad => (
+                            {list ? list.map(ad => (
                                 <React.Fragment key={ad.id}>
                                     <Grid item xs={6} sm={6} md={4} lg={4} >
                                         <AdvertisementView
                                             id={ad.id}
                                             address={this.getPropertyAddress(ad.id)}
                                             imageUrl={ads[Math.floor(Math.random() * 4)].imageUrl}
-                                            price={ad.rentAmount}
-                                            title={ad.title} //propertyList.find(p => p.id === ad.id)?.description || ''
+                                            advertisement={ad}
                                             onFavoriteClick={() => this.onFavoriteClickHandler(ad.id)}
                                             isFavorite={favoriteStatus[ad.id] || false}
                                         />

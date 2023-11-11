@@ -1,5 +1,5 @@
 import React from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useParams, useRouteMatch } from "react-router-dom";
 import Panel from "../../../components/Panel";
 import { Button, Grid, Typography } from "@mui/material";
 import PanelBodyContent from "../../../components/Panel/PanelBodyContent";
@@ -7,6 +7,9 @@ import AdvertisementView, { AdvertisementViewProps } from "./AdvertisementView";
 import Carousel from "../../../components/Carousel";
 import { makeStyles } from "@mui/styles";
 import DefaultButton from "../../../components/DefaultButton";
+import BreadcrumbDynamic from "../../../components/BreadcrumbDynamic";
+import { BreadcrumbsItem } from "react-breadcrumbs-dynamic";
+import { add } from "date-fns";
 
 const images = [
   "https://s2.glbimg.com/CS6ziQq57qk1F18WhdJoRWDjT8s=/e.glbimg.com/og/ed/f/original/2021/08/09/materiais-naturais-valorizam-a-decoracao-dessa-casa-de-1000-m2-6.jpg",
@@ -25,10 +28,14 @@ const useStyles = makeStyles(() => ({
 const AdvertisementViewPage: React.FC = () => {
   const classes = useStyles();
   const location = useLocation();
-  const { imageUrl, title, address, price, onFavoriteClick, isFavorite } = location.state as AdvertisementViewProps;
+  const match = useRouteMatch();
+  const { imageUrl, address, advertisement, onFavoriteClick, isFavorite } = location.state as AdvertisementViewProps;
 
   return (
-    <>
+    <>                        
+      <BreadcrumbsItem to={match.url}>
+        {address?.street}
+      </BreadcrumbsItem>
       <Panel
         panelHeaderTitle=""
       >
@@ -39,15 +46,15 @@ const AdvertisementViewPage: React.FC = () => {
             </Grid>
           </Grid>
           <Grid container direction="column" alignItems="center" marginTop={5}>
-            <Typography variant="h4">{title}</Typography>
-            <Typography variant="subtitle1">{address}</Typography>
+            <Typography variant="h4">{address?.street}</Typography>
+            <Typography variant="subtitle1">{`${address?.neighborhood}, ${address?.city}/${address?.state}`}</Typography>
           </Grid>
           <Grid container direction="row" justifyContent='center' alignItems="center" marginTop={5}>
             <Grid item xs={12} sm={12} md={6} lg={6} textAlign='center' margin={2}>
-              <Typography variant="body1">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque viverra venenatis massa nec scelerisque. Suspendisse rutrum felis nec nulla rutrum sagittis. Integer tristique non lacus ac ultricies. Proin erat felis, tincidunt ut accumsan a, consequat nec est. Donec tristique ligula in erat facilisis volutpat varius pharetra lacus. Morbi eu erat sit amet nibh mollis porttitor at ac orci. Sed bibendum, velit sed luctus egestas, ex ipsum venenatis est, a tempus nisi tellus eget mi.</Typography>
+              <Typography variant="body1">{advertisement.information}</Typography>
             </Grid>
             <Grid item xs={12} sm={12} md={6} lg={6} textAlign='center' margin={5}>
-              <Typography variant="h5">R${price}</Typography>
+              <Typography variant="h5">R${advertisement.rentAmount}</Typography>
             </Grid>
             <Grid item xs={12} sm={12} md={6} lg={6} textAlign='center' margin={5}>
               <DefaultButton variant="contained">Fazer Proposta</DefaultButton>

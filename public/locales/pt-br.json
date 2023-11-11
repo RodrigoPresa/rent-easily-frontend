@@ -49,7 +49,7 @@
     "typeError": "'${path}' deve ser um valor alfanumérico",
     "url": "Deve ter um formato de URL válida"
   },
-  "general": {    
+  "general": {
     "action": "ação",
     "actions": "ações",
     "active": "ativas",
@@ -61,7 +61,8 @@
     "addressComplement": "complemento",
     "addressNumber": "número",
     "addTitle": "Cadastro de {{element}}",
-    "advanced": "avançado",    
+    "advanced": "avançado",
+    "advertisement": "anúncio",   
     "all": "todos",
     "anElementWithThisCpfHasAlreadyBeenAdded": "Um {{element}} com este CPF já foi adicionado à lista",
     "areaCode": "código de área",

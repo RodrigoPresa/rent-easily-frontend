@@ -98,7 +98,7 @@ export default class AuthService {
 		
 	async getUser(response: any): Promise<User> {
 		const { data } = await response.json();
-		const [first,] = data;
+		const [first] = data;
 		return first as User;
 	}
 
@@ -122,9 +122,10 @@ export default class AuthService {
 		var url = "http://localhost:8080/user/find/credentials";
 		const response = await fetch(url, options);
 		if (response.ok) {
+			console.log(response);
 			const user: User = await this.getUser(response);
 			const result = await this.fetchAuthentication(user);
-			if (result.ok) {
+			if (result.ok) {				
 				const tkn: Token = await this.getToken(result);
 				let accessToken = tkn.result[0].payload;
 				let refreshToken = tkn.result[0].payload;

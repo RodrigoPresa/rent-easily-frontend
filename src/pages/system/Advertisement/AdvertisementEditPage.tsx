@@ -88,14 +88,14 @@ class AdvertisementEditPage extends React.Component<AdvertisementEditPageProps, 
         if (!match) return;
 
         const id = match.params.id;
-        const { active, information, propertyId, rentAmount } = data;
+        const { active, information, property: propertyId, rentAmount } = data;
 
         const result = isDirty ? await this.service.update(id, {
             active, information, propertyId, rentAmount
         }) : true;
 
         if (result) {
-            const device = await this.getAdvertisement();
+            const advertisement = await this.getAdvertisement();
 
             this.setState({
                 advertisement,
@@ -152,7 +152,7 @@ class AdvertisementEditPage extends React.Component<AdvertisementEditPageProps, 
 
     goToAdvertisementEditLink(advertisement: Advertisement) {
         const { history } = this.props;
-        var url = `/system/management/${advertisement.id}/edit`;
+        var url = `/system/advertisement/${advertisement.id}/edit`;
         history.push(url);
     }
 
@@ -192,6 +192,7 @@ class AdvertisementEditPage extends React.Component<AdvertisementEditPageProps, 
                         </AppBar>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                             {tabSelected === 0 && <AdvertisementForm
+                                authUser={authUser}
                                 advertisement={advertisement}
                                 editing={(editingTab === 0)}
                                 isDisabled={false}

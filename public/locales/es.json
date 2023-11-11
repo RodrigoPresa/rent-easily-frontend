@@ -62,6 +62,7 @@
         "addressNumber": "número",
         "addTitle": "Registro de {{element}}",
         "advanced": "avanzado",
+        "advertisement": "anuncio",
         "all": "todos",
         "anElementWithThisCpfHasAlreadyBeenAdded": "Ya se ha añadido a la lista un {{element}} con este CPF",
         "areaCode": "codigo de área",

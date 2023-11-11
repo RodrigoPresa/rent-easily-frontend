@@ -1,5 +1,5 @@
 import React, { PropsWithChildren, Suspense, useEffect } from 'react';
-import { BreadcrumbsProvider } from 'react-breadcrumbs-dynamic';
+import { BreadcrumbsItem, BreadcrumbsProvider } from 'react-breadcrumbs-dynamic';
 import { useDispatch } from 'react-redux';
 import { Redirect, Route, Switch, useHistory, useRouteMatch } from 'react-router-dom';
 import User from '../../model/User';
@@ -11,6 +11,7 @@ import { OverlayLoading } from '../../components/OverlayLoading/OverlayLoading';
 import SystemRootPage from './SystemRootPage';
 import { loadingAction } from '../../reducer/loading';
 import AuthService from '../../services/AuthService';
+import TreeViewSelectProvider from '../../components/TreeView/TreeViewSelectProvider';
 
 const AdvertisementPage = React.lazy(() => import('./Advertisement/AdvertisementPage'));
 
@@ -37,9 +38,12 @@ function SystemRoot() {
             <Header routePermissions={routePermissions} />
             <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
                 <Suspense fallback={<OverlayLoading loading />}>
+                    <BreadcrumbsItem to={`/system`}>
+                        Home
+                    </BreadcrumbsItem>
                     <Switch>
                         <Route exact path={match.url} component={SystemRootPage} />
-                        {routePermissions.map((r, k) => (                      
+                        {routePermissions.map((r, k) => (
                             <Route key={`route-${k}`} path={match.url + "/" + r.route} component={r.component} />)
                         )}
                         <Route render={() => <Redirect to={match?.url || ""} />} />
@@ -106,9 +110,11 @@ function System() {
 
     return (
         <React.Fragment key={authUser?.id}>
-            <BreadcrumbsProvider>
-                <SystemRoot />
-            </BreadcrumbsProvider>
+            <TreeViewSelectProvider>
+                <BreadcrumbsProvider>
+                    <SystemRoot />
+                </BreadcrumbsProvider>
+            </TreeViewSelectProvider>
         </React.Fragment >
     );
 

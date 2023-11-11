@@ -264,25 +264,6 @@ export async function asyncPredicate(predicate, timeout = 1000, step = 10) {
     return false;
 }
 
-/**
- * 
- * @param {string} message 
- * @param {Function} onclick 
- * @returns {Promise<Boolean>}
- */
-export async function windowNotity(message, onclick) {
-    var permission = window.Notification.permission;
-    if (permission !== 'granted') {
-        permission = await window.Notification.requestPermission();
-    }
-    if (permission === 'granted') {
-        const notification = new window.Notification('Commbox SafeAccess Lite', { body: message });
-        notification.onclick = onclick;
-        return true;
-    }
-    return false;
-}
-
 export function getReactElementText(element) {
     const pieces = [];
     if (typeof element === 'string' || typeof element === 'number') {

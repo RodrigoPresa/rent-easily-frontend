@@ -94,6 +94,12 @@ export async function promiseGetRequest(url: string) {
     return promiseRequest(url, 'GET');
 }
 
+export interface ResponseData<T> {
+    status: number,
+    message: string,
+    data: T[]
+}
+
 export class ServiceApi<T>{
 
     constructor(protected model: string) {
@@ -110,10 +116,13 @@ export class ServiceApi<T>{
         return getBaseUrl(model);
     }
 
-    getList(): Promise<T[]> {
+    getList(query?: string | null): Promise<ResponseData<T>> {
         var baseUrl = this.getBaseUrl();
         var url = baseUrl + 'find/all';
-
+        if (query) {
+            url += `?${query}`;
+        }
+        console.log(url);
         return promiseGetRequest(url);
     }
 

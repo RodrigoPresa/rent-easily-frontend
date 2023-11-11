@@ -11,10 +11,13 @@ import { WithSnackbarProps, withSnackbar } from "notistack";
 import { delay } from "../../../utils/util";
 import AdvertisementForm, { AdvertisementFormData } from "./AdvertisementForm";
 import { ServiceApi } from "../../../services/ServiceApi";
+import { connect } from "react-redux";
+import { RootState } from "../../../reducer";
+import User from "../../../model/User";
 
 
 export interface AdvertisementAddPageProps extends RouteChildrenProps, WithSnackbarProps, WithTranslateProps {
-
+    authUser?: User;
 }
 
 export interface AdvertisementAddPageState {
@@ -45,7 +48,7 @@ class AdvertisementAddPage extends React.Component<AdvertisementAddPageProps, Ad
 
     async onFormSubmit(data: AdvertisementFormData) {
         const { history, match, enqueueSnackbar, t } = this.props;
-        const { active, information, propertyId, rentAmount } = data;
+        const { active, information, property: propertyId, rentAmount } = data;
 
         const result = await this.service.insert(
             { active, information, propertyId, rentAmount }
@@ -98,17 +101,18 @@ class AdvertisementAddPage extends React.Component<AdvertisementAddPageProps, Ad
 
     render() {
 
-        const { match, t } = this.props;
+        const { match, t, authUser } = this.props;
         const { tabSelected, editingTab, generalComponentKey } = this.state;
 
         if (!match) return null;
+        if (!authUser) return null;
 
         return (
             <>
                 <BreadcrumbsItem to={match.url}>
-                    <Trans translateKey="addTitle" valuesToReplace={{ element: t('controller', { capitalize: true, namespace: "device" }) }} capitalize />
+                    <Trans translateKey="addTitle" valuesToReplace={{ element: t('advertisement', { capitalize: true }) }} capitalize />
                 </BreadcrumbsItem>
-                <Panel panelHeaderTitle={<Trans translateKey="addTitle" valuesToReplace={{ element: t('controller', { capitalize: true, namespace: "device" }) }} capitalize />}>
+                <Panel panelHeaderTitle={<Trans translateKey="addTitle" valuesToReplace={{ element: t('advertisement', { capitalize: true }) }} capitalize />}>
                     <PanelBodyFormContent>
                         <AppBar position="relative" color="default">
                             <Tabs
@@ -124,6 +128,7 @@ class AdvertisementAddPage extends React.Component<AdvertisementAddPageProps, Ad
                         </AppBar>
                         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                             {tabSelected === 0 && <AdvertisementForm
+                                authUser={authUser}
                                 advertisement={null}
                                 editing={(editingTab === 0)}
                                 isDisabled={false}
@@ -132,8 +137,7 @@ class AdvertisementAddPage extends React.Component<AdvertisementAddPageProps, Ad
                                 key={'tab_general_' + generalComponentKey}
                                 onSubmit={data => this.onFormSubmit(data)}
                                 onCancel={this.onCancel}
-                                goToAdvertisementEditLink={this.goToAdvertisementEditLink}
-                            />
+                                goToAdvertisementEditLink={this.goToAdvertisementEditLink} />
                             }
                         </div>
                     </PanelBodyFormContent>
@@ -142,5 +146,4 @@ class AdvertisementAddPage extends React.Component<AdvertisementAddPageProps, Ad
         );
     }
 }
-
-export default withSnackbar(withTranslate<AdvertisementAddPageProps>()(AdvertisementAddPage));
+export default connect((root: RootState) => ({ authUser: root.authentication.authUser }))(withSnackbar(withTranslate<AdvertisementAddPageProps>()(AdvertisementAddPage)));
