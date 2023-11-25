@@ -1,12 +1,10 @@
 import { faStar } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { Box, Card, CardActions, CardContent, CardMedia, Divider, Grid, IconButton, Typography } from '@mui/material';
+import { Box, Card, CardActions, CardContent, CardMedia, Grid, IconButton, Typography } from '@mui/material';
 import React from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import AdvertisementViewPage from './AdvertisementViewPage';
+import { useHistory } from 'react-router-dom';
 import PropertyAddress from '../../../model/PropertyAddress';
 import Advertisement from '../../../model/Advertisement';
-
 
 export interface AdvertisementViewProps {
   id: number;

@@ -1,22 +1,18 @@
 import React from "react";
 import User from "../../../model/User";
-import { Link, RouteChildrenProps } from "react-router-dom";
+import { RouteChildrenProps } from "react-router-dom";
 import Advertisement from "../../../model/Advertisement";
-import { ResponseData, ServiceApi } from "../../../services/ServiceApi";
-import { useSnackbar } from 'notistack';
-import TableList from "../../../components/TableList/TableList";
+import { ServiceApi } from "../../../services/ServiceApi";
 import { connect } from "react-redux";
 import { RootState } from "../../../reducer";
 import { WithTranslateProps, withTranslate } from "../../../components/Translate/withTranslate";
-import { Trans } from "../../../components/Translate";
 import AdvertisementView from "./AdvertisementView";
-import Panel from "../../../components/Panel";
-import PanelBodyContent from "../../../components/Panel/PanelBodyContent";
 import { Grid } from "@mui/material";
-import { hi } from "date-fns/locale";
 import Property from "../../../model/Property";
-import { get } from "http";
 import PropertyAddress from "../../../model/PropertyAddress";
+import Favorite from "../../../model/Favorite";
+import DateTimeDTO from "../../../model/DateTimeDTO";
+import moment from "moment";
 
 const ads = [
     {
@@ -49,6 +45,11 @@ const ads = [
     },
 ];
 
+interface FavoriteRequest {
+    userId: number;
+    advertisementId: number;
+    dateTime: DateTimeDTO;
+}
 
 export interface AdvertisementListPageProps extends RouteChildrenProps, WithTranslateProps {
     authUser?: User;
@@ -68,6 +69,7 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
 
     private service: ServiceApi<Advertisement>;
     private propertyService: ServiceApi<Property>;
+    private favoriteService: ServiceApi<Favorite>;
 
     constructor(props: AdvertisementListPageProps) {
         super(props);
@@ -83,6 +85,7 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
 
         this.service = new ServiceApi<Advertisement>('advertisement');
         this.propertyService = new ServiceApi<Property>('property');
+        this.favoriteService = new ServiceApi<Favorite>('favorite');
 
         this.onFavoriteClickHandler = this.onFavoriteClickHandler.bind(this);
     }
@@ -95,13 +98,13 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
     async reload(searchText: string, page: number, rowsPerPage: number) {
         const list = await this.getAdvertisements(searchText, page, rowsPerPage);
         const propertyList = await this.getProperties(searchText, page, rowsPerPage);
-        this.setState({ list, propertyList});
+        this.setState({ list, propertyList });
     }
 
     getAdvertisements(searchText: string, page: number, rowsPerPage: number): Promise<Advertisement[]> {
         return this.service.getList().then(list => (list.data));
     }
-    
+
     getProperties(searchText: string, page: number, rowsPerPage: number): Promise<Property[]> {
         return this.propertyService.getList().then(list => (list.data));
     }
@@ -114,14 +117,37 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
         return address;
     }
 
-    onFavoriteClickHandler(advertisementId: number) {
+    setFavoriteStatus(advertisementId: number, userId: number, status: boolean) {
+        if (status) {
+            const dateTime = new Date();
+            const data: FavoriteRequest = {
+                advertisementId,
+                userId,
+                dateTime: {
+                    date: moment(dateTime).format('YYYY-MM-DD'),
+                    time: moment(dateTime).format('HH:mm:ss')
+                }
+            }
+            this.favoriteService.insert(data);
+        } else {
+            this.favoriteService.delete(advertisementId);
+        }
+    }
+
+    onFavoriteClickHandler(advertisement: Advertisement) {
         const { authUser, history } = this.props;
 
-        if (!authUser) history.push('/login');
+        if (!authUser) {
+            history.push('/login');
+            return;
+        };
 
+        if (authUser?.id === advertisement.propertyId) return;
+
+        //this.setFavoriteStatus(advertisement.id, authUser.id, !this.state.favoriteStatus[advertisement.id]);
         this.setState(prevState => {
             const favoriteStatus = { ...prevState.favoriteStatus };
-            favoriteStatus[advertisementId] = !favoriteStatus[advertisementId];
+            favoriteStatus[advertisement.id] = !favoriteStatus[advertisement.id];
             return { favoriteStatus };
         });
     }
@@ -129,37 +155,31 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
     render() {
         const { list, propertyList, favoriteStatus, page, count, rowsPerPage, searchText } = this.state;
         const { authUser } = this.props;
-        
+
         // const editAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Update}`);
         // const addAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Create}`);
         // const deleteAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Delete}`);
 
         return (
             <>
-                <Panel
-                    panelHeaderTitle=""
-                >
-                    <PanelBodyContent>
-                        <Grid container direction="row" alignItems="center">
-                            {list ? list.map(ad => (
-                                <React.Fragment key={ad.id}>
-                                    <Grid item xs={6} sm={6} md={4} lg={4} >
-                                        <AdvertisementView
-                                            id={ad.id}
-                                            address={this.getPropertyAddress(ad.id)}
-                                            imageUrl={ads[Math.floor(Math.random() * 4)].imageUrl}
-                                            advertisement={ad}
-                                            onFavoriteClick={() => this.onFavoriteClickHandler(ad.id)}
-                                            isFavorite={favoriteStatus[ad.id] || false}
-                                        />
-                                    </Grid>
-                                </React.Fragment>
-                            )) :
-                                <div style={{ textAlign: 'center' }}>Nenhum anúncio disponível</div>
-                            }
-                        </Grid>
-                    </PanelBodyContent>
-                </Panel >
+                <Grid container direction="row" alignItems="center">
+                    {list ? list.map(ad => (
+                        <React.Fragment key={ad.id}>
+                            <Grid item xs={6} sm={6} md={4} lg={4} >
+                                <AdvertisementView
+                                    id={ad.id}
+                                    address={this.getPropertyAddress(ad.id)}
+                                    imageUrl={ads[Math.floor(Math.random() * 4)].imageUrl}
+                                    advertisement={ad}
+                                    onFavoriteClick={() => this.onFavoriteClickHandler(ad)}
+                                    isFavorite={favoriteStatus[ad.id] || false}
+                                />
+                            </Grid>
+                        </React.Fragment>
+                    )) :
+                        <div style={{ textAlign: 'center' }}>Nenhum anúncio disponível</div>
+                    }
+                </Grid>
             </>
         );
     }

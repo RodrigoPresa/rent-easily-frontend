@@ -36,7 +36,7 @@ function SystemRoot() {
     return (
         <MobileSideNavContextProvider>
             <Header routePermissions={routePermissions} />
-            <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
+            <div style={{ flex: 1, display: 'flex', overflow: 'auto' }}>
                 <Suspense fallback={<OverlayLoading loading />}>
                     <BreadcrumbsItem to={`/system`}>
                         Home

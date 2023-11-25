@@ -22,6 +22,7 @@ import { getFirstLettersToAvatar } from '../../utils/util';
 import AuthService from '../../services/AuthService';
 import Logo from '../../images/logo.png';
 import DefaultButton from '../DefaultButton';
+import { RegistrationType } from '../../enum/RegistrationType';
 
 const useStyles = makeStyles(theme => ({
     root: {
@@ -124,11 +125,13 @@ export interface IHeaderMenuItem {
     url: string;
 }
 
-function getMenuList(routePermissions: IRoutePermission[]): IHeaderMenuItem[] {
+function getMenuList(authUser: User | undefined, routePermissions: IRoutePermission[]): IHeaderMenuItem[] {
     var listMenus: IHeaderMenuItem[] = [];
 
     listMenus.push({ label: "Buscar Anúncios", url: '/system/advertisement' });
-    listMenus.push({ label: "Proprietários", url: '/system/properties' });
+    if (authUser?.registerType === RegistrationType.LESSOR) {
+        listMenus.push({ label: "Proprietários", url: '/system/properties' });
+    }
 
     return listMenus;
 }
@@ -145,8 +148,9 @@ interface InnerHeaderProps extends HeaderProps {
 
 function MainMenu({ routePermissions, onMenuClick }: MainMenuProps) {
 
+    const { authUser } = useSelector(mapStateToProps);
     const classes = useStyles();
-    const menus = getMenuList(routePermissions);
+    const menus = getMenuList(authUser, routePermissions);
 
     const url = window.location.hash;
 
@@ -295,9 +299,9 @@ function Header({ routePermissions }: HeaderProps) {
         loading(false);
         dispatch(logoutAction());
     }
-    
+
     async function login() {
-        history.push('/login');        
+        history.push('/login');
     }
 
     const isMenuOpen = Boolean(userMenuAnchorEl);
