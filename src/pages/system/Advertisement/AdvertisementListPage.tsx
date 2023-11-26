@@ -7,7 +7,7 @@ import { connect } from "react-redux";
 import { RootState } from "../../../reducer";
 import { WithTranslateProps, withTranslate } from "../../../components/Translate/withTranslate";
 import AdvertisementView from "./AdvertisementView";
-import { Grid } from "@mui/material";
+import { Grid, Typography } from "@mui/material";
 import Property from "../../../model/Property";
 import PropertyAddress from "../../../model/PropertyAddress";
 import Favorite from "../../../model/Favorite";
@@ -177,7 +177,9 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
                             </Grid>
                         </React.Fragment>
                     )) :
-                        <div style={{ textAlign: 'center' }}>Nenhum anúncio disponível</div>
+                        <Grid container direction="column" alignItems="center" marginTop={5}>
+                            <Typography variant="subtitle2" fontSize="1.2rem">Nenhum anúncio disponível</Typography>
+                        </Grid>
                     }
                 </Grid>
             </>

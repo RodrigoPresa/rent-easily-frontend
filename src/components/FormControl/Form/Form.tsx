@@ -103,9 +103,6 @@ export interface FormFooterAllButtonsProps {
 }
 
 export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
-
-    const t = useTranslate();
-
     const { blocked, isSubmitting, onUndo, dirty, onBack, form } = props;
     const isDirty = (dirty ? Object.getOwnPropertyNames(dirty).length > 0 : false) || props.isDirty;
 
@@ -122,9 +119,6 @@ export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
         <FormControl fullWidth variant="outlined" margin="dense" style={{ flexDirection: 'row', justifyContent: 'flex-start' }}>
             {isDirty &&
                 <>
-                    {/* <DefaultButton form={formId} onClick={() => handleSubmit('saveAndBack')} type={'submit'} variant="contained" size='small' id="btnSaveAndBack" name="btnSaveAndBack" value="btnSaveAndBack" disabled={blocked || isSubmitting}>
-                        Salvar e voltar
-                    </DefaultButton> */}
                     <DefaultButton form={formId} onClick={() => handleSubmit('save')} style={{ marginLeft: 10 }} type={'submit'} variant="contained" size='small' id="btnSave" name="btnSave" value="btnSave" disabled={blocked || isSubmitting}>
                         Salvar
                     </DefaultButton>
@@ -132,9 +126,9 @@ export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
                         disabled={blocked || isSubmitting}
                         onClick={() => {
                             confirmation(undefined, {
-                                title: t('confirmUndoChanges', { capitalize: true, namespace: 'form' }),
-                                okLabel: t('yes', { capitalize: true }),
-                                cancelLabel: t('no', { capitalize: true }),
+                                title: 'Deseja desfazer as alterações?',
+                                okLabel: 'Sim',
+                                cancelLabel: 'Não',
                                 onProceed: () => {
                                     onUndo();
                                 }
@@ -142,21 +136,21 @@ export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
                         }}
                         style={{ marginLeft: 10 }}
                     >
-                        <Trans translateKey="undoChanges" namespace="form" capitalize />
+                        Cancelar
                     </ErrorButton>}
                 </>
             }
             <ErrorButton variant="contained" size='small' id="btnCancel"
                 disabled={!!(isDirty && onUndo && !blocked)}
-                title={!!(isDirty && onUndo) ? t('saveOrUndoChanges', { capitalize: true, namespace: 'form' }) : ''}
+                title={!!(isDirty && onUndo) ? 'Salve ou desfaça as alterações antes de voltar' : ''}
                 onClick={() => {
                     if (!isDirty || blocked) {
                         onBack();
                     } else {
                         confirmation(undefined, {
-                            title: t('confirmSaveOrUndoChanges', { capitalize: true, namespace: 'form' }),
-                            okLabel: t('yes', { capitalize: true }),
-                            cancelLabel: t('no', { capitalize: true }),
+                            title: 'Todas as alterações serão perdidas, deseja mesmo sair?',
+                            okLabel: 'Sim',
+                            cancelLabel: 'Não',
                             onProceed: () => {
                                 onBack();
                             }
@@ -165,7 +159,7 @@ export function FormFooterAllButtons(props: FormFooterAllButtonsProps) {
                 }}
                 style={{ marginLeft: 10 }}
             >
-                <Trans translateKey="back" capitalize />
+                Cancelar
             </ErrorButton>
         </FormControl>
     )

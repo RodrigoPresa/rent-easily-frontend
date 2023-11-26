@@ -14,14 +14,16 @@ import AuthService from '../../services/AuthService';
 import TreeViewSelectProvider from '../../components/TreeView/TreeViewSelectProvider';
 
 const AdvertisementPage = React.lazy(() => import('./Advertisement/AdvertisementPage'));
+const PropertyPage = React.lazy(() => import('./Property/PropertyPage'));
 
 
 function getRoutePermissions(authUser: User | undefined) {
 
     const routePermissions: IRoutePermission[] = [];
-    //if (!authUser) return routePermissions;
+    if (!authUser) return routePermissions;
 
     routePermissions.push({ route: 'advertisement', component: AdvertisementPage });
+    routePermissions.push({ route: 'properties', component: PropertyPage });
 
     return routePermissions;
 }
