@@ -33,7 +33,7 @@ const PropertyView: React.FC<PropertyViewProps> = ({
             <Card sx={{ display: 'flex', flexDirection: 'row', margin: 2, cursor: 'pointer' }}>
               <CardMedia
                 component="img"
-                sx={{ width: 151 }}
+                sx={{ maxWidth: 151, height: 151 }}
                 image="https://s2.glbimg.com/CS6ziQq57qk1F18WhdJoRWDjT8s=/e.glbimg.com/og/ed/f/original/2021/08/09/materiais-naturais-valorizam-a-decoracao-dessa-casa-de-1000-m2-6.jpg"
               />
               <Box onClick={onPropertyClick}>
@@ -44,6 +44,11 @@ const PropertyView: React.FC<PropertyViewProps> = ({
                   <Typography variant="subtitle1" color="text.secondary" component="div">
                     {`${property.address?.neighborhood ?? ""}, ${property.address?.city ?? ""}/${property.address?.state ?? ""}`}
                   </Typography>
+                  {!property.active ?
+                    <Typography variant="subtitle1" color="text.secondary" component="div">
+                      {<span style={{ color: 'red', fontWeight: 'bold' }}>Em verificação</span>}
+                    </Typography> : null
+                  }
                 </CardContent>
               </Box>
             </Card>

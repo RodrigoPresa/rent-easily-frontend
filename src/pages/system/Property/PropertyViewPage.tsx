@@ -11,6 +11,8 @@ import Carousel from "../../../components/Carousel";
 import DefaultButton from "../../../components/DefaultButton";
 import { CheckBox } from "@mui/icons-material";
 import Checkbox from "../../../components/TableList/Checkbox";
+import Advertisement from "../../../model/Advertisement";
+import AdvertisementDTO from "../../../model/AdvertisementDTO";
 
 const images = [
   "https://s2.glbimg.com/CS6ziQq57qk1F18WhdJoRWDjT8s=/e.glbimg.com/og/ed/f/original/2021/08/09/materiais-naturais-valorizam-a-decoracao-dessa-casa-de-1000-m2-6.jpg",
@@ -35,10 +37,11 @@ const PropertyViewPage: React.FC = () => {
   const { authUser } = useAuthentication();
 
   const [isCreateModalOpen, setCreateModalOpen] = useState(false);
-  // const [editedInformation, setEditedInformation] = useState(advertisement.information);
-  // const [editedRentAmount, setEditedRentAmount] = useState(advertisement.rentAmount);
+  const [adInformation, setAdInformation] = useState("");
+  const [adRentAmount, setAdRentAmount] = useState(0);
 
   const service = new ServiceApi<Property>('property');
+  const advertisementService = new ServiceApi<Advertisement>('advertisement');
 
   const handleOpenCreateModal = () => {
     setCreateModalOpen(true);
@@ -49,10 +52,13 @@ const PropertyViewPage: React.FC = () => {
   };
 
   const handleSaveChanges = async () => {
-    // const result = await service.update(advertisement.id, {
-    //   information: editedInformation,
-    //   rentAmount: editedRentAmount,
-    // });
+    const data: AdvertisementDTO = {
+      rentAmount: adRentAmount,
+      information: adInformation,
+      propertyId: property.id
+    };
+
+    const result = await advertisementService.insert(data);
 
     setCreateModalOpen(false);
   };
@@ -78,18 +84,33 @@ const PropertyViewPage: React.FC = () => {
           <Grid item marginBottom={5}>
             <Typography variant="h5">Registro: <span style={{ color: 'blue', fontWeight: 'bold' }}>{property.registryId}</span></Typography>
           </Grid>
+          <Grid item marginBottom={5}>
+            {
+              property.active ?
+                <DefaultButton variant="contained" onClick={handleOpenCreateModal}>Criar anúncio</DefaultButton> :
+                null
+            }
+          </Grid>
         </Grid>
       </Grid>
 
       {/* Modal de Cadastro */}
       <Dialog open={isCreateModalOpen} onClose={handleCloseCreateModal}>
-        <DialogTitle>Cadastrar imóvel</DialogTitle>
+        <DialogTitle>Cadastrar Anúncio</DialogTitle>
         <DialogContent>
-          <TextField
+        <TextField
             label="Informação"
             fullWidth
-            value={""}
-            onChange={() => { }}
+            value={adInformation}
+            onChange={(e) => setAdInformation(e.target.value)}
+            margin="normal"
+          />
+          <TextField
+            label="Valor do Aluguel"
+            fullWidth
+            type="number"
+            value={adRentAmount}
+            onChange={(e) => setAdRentAmount(parseInt(e.target.value))}
             margin="normal"
           />
         </DialogContent>
