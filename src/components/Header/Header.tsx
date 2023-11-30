@@ -129,6 +129,7 @@ function getMenuList(authUser: User | undefined, routePermissions: IRoutePermiss
     var listMenus: IHeaderMenuItem[] = [];
 
     listMenus.push({ label: "Buscar Anúncios", url: '/system/advertisement' });
+    
     if (authUser?.registerType === RegistrationType.LESSOR) {
         listMenus.push({ label: "Proprietários", url: '/system/properties' });
     }
@@ -201,12 +202,12 @@ function DesktopHeader({ user, routePermissions, profileMenuClick, onLoginClick 
             <DesktopMainMenu
                 routePermissions={routePermissions}
             />
-            <HeaderAccountInfo authUser={undefined} />
+            <HeaderAccountInfo authUser={user} />
             <div style={{ justifyContent: 'flex-end', alignSelf: 'center' }}>
                 {
                     user ?
                         <Avatar style={{ cursor: 'pointer' }} className={classes.avatar} onClick={profileMenuClick}>
-                            {getFirstLettersToAvatar(user?.fullName || "")}
+                            {getFirstLettersToAvatar(user.fullName)}
                         </Avatar> :
                         <DefaultButton
                             variant="contained"

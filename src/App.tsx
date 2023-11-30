@@ -147,12 +147,9 @@ class App extends Component<AppProps, AppState> {
 
     async verifyAuth() {
         var { successLoginAction, logoutAction } = this.props;
-        var user = await AuthService.instance.getAuthUser();
-        if (user) {
-            successLoginAction(user);
-        } else {
-            await AuthService.instance.logout();
-            logoutAction();
+        var authUser = AuthService.instance.getAuthUser();
+        if (authUser.user) {
+            successLoginAction(authUser.user);
         }
     }
 

@@ -1,16 +1,13 @@
-import React, { PropsWithChildren, Suspense, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { BreadcrumbsItem, BreadcrumbsProvider } from 'react-breadcrumbs-dynamic';
-import { useDispatch } from 'react-redux';
-import { Redirect, Route, Switch, useHistory, useRouteMatch } from 'react-router-dom';
+import { Redirect, Route, Switch, useRouteMatch } from 'react-router-dom';
 import User from '../../model/User';
 import { IRoutePermission } from './IRoutePermissions';
-import { logoutAction, useAuthentication } from '../../reducer/Authentication';
+import { useAuthentication } from '../../reducer/Authentication';
 import MobileSideNavContextProvider from '../../components/MobileSideNav/MobileSideNavContextProvider';
 import Header from '../../components/Header/Header';
 import { OverlayLoading } from '../../components/OverlayLoading/OverlayLoading';
 import SystemRootPage from './SystemRootPage';
-import { loadingAction } from '../../reducer/loading';
-import AuthService from '../../services/AuthService';
 import TreeViewSelectProvider from '../../components/TreeView/TreeViewSelectProvider';
 
 const AdvertisementPage = React.lazy(() => import('./Advertisement/AdvertisementPage'));
@@ -18,9 +15,8 @@ const PropertyPage = React.lazy(() => import('./Property/PropertyPage'));
 
 
 function getRoutePermissions(authUser: User | undefined) {
-
     const routePermissions: IRoutePermission[] = [];
-    if (!authUser) return routePermissions;
+    //if (!authUser) return routePermissions;
 
     routePermissions.push({ route: 'advertisement', component: AdvertisementPage });
     routePermissions.push({ route: 'properties', component: PropertyPage });
@@ -56,55 +52,55 @@ function SystemRoot() {
     )
 }
 
-function AuthenticatedSystem({ children }: PropsWithChildren<{}>) {
+// function AuthenticatedSystem({ children }: PropsWithChildren<{}>) {
 
-    var timer: number = 0;
+//     var timer: number = 0;
 
-    const dispatch = useDispatch();
-    const history = useHistory();
+//     const dispatch = useDispatch();
+//     const history = useHistory();
 
-    const { loggedIn, authUser } = useAuthentication();
+//     const { loggedIn, authUser } = useAuthentication();
 
-    useEffect(() => {
-        if (authUser?.id) {
-            startTimer();
-            validateToken();
-        }
-        return stopTimer;
-    }, []);
+//     useEffect(() => {
+//         if (authUser?.id) {
+//             startTimer();
+//             validateToken();
+//         }
+//         return stopTimer;
+//     }, []);
 
-    useEffect(() => {
-        if (loggedIn == false || !authUser) {
-            history.push("/");
-        }
-    }, [authUser, loggedIn]);
+//     useEffect(() => {
+//         if (loggedIn == false || !authUser) {
+//             history.push("/");
+//         }
+//     }, [authUser, loggedIn]);
 
-    async function logOut() {
-        dispatch(loadingAction(true));
-        await AuthService.instance.logout();
-        dispatch(loadingAction(false));
-        dispatch(logoutAction());
-    }
+//     async function logOut() {
+//         dispatch(loadingAction(true));
+//         await AuthService.instance.logout();
+//         dispatch(loadingAction(false));
+//         dispatch(logoutAction());
+//     }
 
-    async function validateToken() {
-        var user = await AuthService.instance.getAuthUser();
-        if (user === null) {
-            await logOut();
-        }
-    }
+//     async function validateToken() {
+//         var user = await AuthService.instance.getAuthUser();
+//         if (user === null) {
+//             await logOut();
+//         }
+//     }
 
-    function startTimer() {
-        timer = window.setInterval(validateToken, 60 * 1000); //1 minute
-    }
+//     function startTimer() {
+//         timer = window.setInterval(validateToken, 60 * 1000); //1 minute
+//     }
 
-    function stopTimer() {
-        window.clearInterval(timer);
-    }
+//     function stopTimer() {
+//         window.clearInterval(timer);
+//     }
 
-    if (loggedIn && authUser) return <>{children}</>;
+//     if (loggedIn && authUser) return <>{children}</>;
 
-    return null;
-}
+//     return null;
+// }
 
 function System() {
 

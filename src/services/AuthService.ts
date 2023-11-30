@@ -5,10 +5,8 @@ import { getBaseUrl, promiseRequest } from "./ServiceApi";
 
 let scopes: string[];
 
-export type AuthType = 'local' | 'AzureAd';
-
-export function saveAuthToken({ accessToken, refreshToken }: AuthResponse) {
-	return localStorage.setItem("authTokens", JSON.stringify({ accessToken, refreshToken }));
+export function saveAuthToken({ accessToken, refreshToken, user }: AuthResponse) {
+	return localStorage.setItem("authTokens", JSON.stringify({ accessToken, refreshToken, user }));
 };
 
 function clearAuthToken() {
@@ -132,12 +130,6 @@ export default class AuthService {
 				saveAuthToken({ accessToken, refreshToken, user })
 			}
 
-			// TODO: Pensar em como será feito o controle de permissões
-			// if (user) {
-			// 	scopes = await AuthService.instance.getAuthUserPermissions(user.id)
-			// 	user.scopes = scopes;
-			// }
-
 			return user;
 		}
 		else {
@@ -222,14 +214,8 @@ export default class AuthService {
 		clearAuthToken();
 	}
 
-	getAuthUser(): Promise<User> {
-		var url = getBaseUrl('auth') + 'user';
-		return promiseRequest(url);
+	getAuthUser(): AuthResponse {
+		var user = localStorage.getItem("authTokens");
+		return typeof user === "string" ? JSON.parse(user) : null;
 	}
-
-	// getAuthUserPermissions(id: string | number): Promise<string[]> {
-	// 	var baseUrl = getBaseUrl('auth');
-	// 	var url = `${baseUrl}${id}/userPermissions`
-	// 	return promiseRequest(url);
-	// }
 }

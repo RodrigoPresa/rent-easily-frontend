@@ -144,7 +144,7 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
 
         if (authUser?.id === advertisement.propertyId) return;
 
-        //this.setFavoriteStatus(advertisement.id, authUser.id, !this.state.favoriteStatus[advertisement.id]);
+        this.setFavoriteStatus(advertisement.id, authUser.id, !this.state.favoriteStatus[advertisement.id]);
         this.setState(prevState => {
             const favoriteStatus = { ...prevState.favoriteStatus };
             favoriteStatus[advertisement.id] = !favoriteStatus[advertisement.id];
@@ -155,10 +155,6 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
     render() {
         const { list, propertyList, favoriteStatus, page, count, rowsPerPage, searchText } = this.state;
         const { authUser } = this.props;
-
-        // const editAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Update}`);
-        // const addAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Create}`);
-        // const deleteAllowed = permission?.includes(`${ApiScopes.Operador}.${ApiScopes.Delete}`);
 
         return (
             <>
