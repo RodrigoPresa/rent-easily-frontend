@@ -263,7 +263,7 @@
         "other": "otro"
     },
     "registerType": {
-        "lesse": "arrendatario",
+        "lessee": "arrendatario",
         "lessor": "arrendador"
     },
     "selectSearch": {

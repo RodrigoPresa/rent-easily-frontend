@@ -51,7 +51,8 @@ const PropertyViewPage: React.FC<WithSnackbarProps> = (props) => {
     const fetchData = async () => {
       try {
         const list = await proposalService.getList();
-        const filteredList = list.data.filter((proposal) => property?.id === adList.find(ad => ad.id === proposal.advertisementId)?.propertyId);
+        
+        const filteredList = list.data.filter((proposal) => proposal.advertisementId === adList.find(ad => ad.propertyId === property?.id)?.id);
         setProposalList(filteredList);
       } catch (error) {
         console.error("Error fetching proposal:", error);
@@ -59,7 +60,7 @@ const PropertyViewPage: React.FC<WithSnackbarProps> = (props) => {
     };
 
     fetchData();
-  }, [proposalList]);
+  }, [adList]);
 
   useEffect(() => {
     if (location.state) {

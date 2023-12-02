@@ -1,4 +1,4 @@
 export enum RegistrationType {
-    LESSE = "lesse",
+    LESSEE = "lessee",
     LESSOR = "lessor"
 }

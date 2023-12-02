@@ -56,7 +56,7 @@ const AdvertisementViewPage: React.FC<WithSnackbarProps> = (props) => {
     };
 
     fetchData();
-  }, [proposalList]);
+  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -88,8 +88,8 @@ const AdvertisementViewPage: React.FC<WithSnackbarProps> = (props) => {
       information: proposalInformation,
       amount: proposalRentAmount,
       proposedAt: {
-        date: new Date().getDate().toString(),
-        time: new Date().getTime().toString()
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toISOString().split('T')[1].replace('Z', '')
       } 
     };
 

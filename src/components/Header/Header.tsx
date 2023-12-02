@@ -299,6 +299,7 @@ function Header({ routePermissions }: HeaderProps) {
         await AuthService.instance.logout();
         loading(false);
         dispatch(logoutAction());
+        history.push('/');
     }
 
     async function login() {

@@ -33,7 +33,7 @@ class SignUpForm extends Component<SignUpFormProps, SignUpFormState> {
             fullName: '',
             cpf: '',
             income: 0,
-            registerType: '',
+            registerType: 'lesse',
             mail: '',
             password: ''
         }
@@ -144,12 +144,12 @@ class SignUpForm extends Component<SignUpFormProps, SignUpFormState> {
                         label={"Tipo de cadastro"}
                         onChange={this.onRegisterTypeChangeHandler}
                         variant="standard"
-                        value={registerType || "lesse"}
+                        value={registerType}
                         style={{margin: "20px 0 10px 0"}}
                         required
                         fullWidth
                     >
-                        <MenuItem key="menuitem-lesse" value="lesse">Locatário</MenuItem>
+                        <MenuItem key="menuitem-lessee" value="lesse">Locatário</MenuItem>
                         <MenuItem key="menuitem-lessor" value="lessor">Locador</MenuItem>
                     </Select>
                     <TextField
