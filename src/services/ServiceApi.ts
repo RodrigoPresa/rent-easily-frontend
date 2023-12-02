@@ -116,17 +116,13 @@ export class ServiceApi<T>{
         return getBaseUrl(model);
     }
 
-    getList(query?: string | null): Promise<ResponseData<T>> {
+    getList(): Promise<ResponseData<T>> {
         var baseUrl = this.getBaseUrl();
         var url = baseUrl + 'find/all';
-        if (query) {
-            url += `?${query}`;
-        }
-        console.log(url);
         return promiseGetRequest(url);
     }
 
-    getById(id: number | string): Promise<T> {
+    getById(id: number | string): Promise<ResponseData<T>> {
         var baseUrl = this.getBaseUrl();
         var url = baseUrl + `find/id/${id}`;
         return promiseGetRequest(url);

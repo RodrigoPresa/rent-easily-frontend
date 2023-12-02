@@ -93,9 +93,12 @@ class PropertyListPage extends React.Component<PropertyListPageProps, PropertyLi
 
     handleSaveChanges = async (data: PropertyFormData) => {
         const { authUser, match, enqueueSnackbar } = this.props;
+        const { propertyList } = this.state;
 
         if (!authUser) return;
         if (!match) return;
+
+        const registryId = (propertyList.length + Math.floor(Math.random() * 1000) + 1).toString();
 
         const { city, country, description, neighborhood, state, street, streetNumber, zipCode } = data;
 
@@ -110,7 +113,7 @@ class PropertyListPage extends React.Component<PropertyListPageProps, PropertyLi
         };
 
         const result = await this.propertyService.insert(
-            { description, userId: authUser.id, registryId: '12345', address }
+            { description, userId: authUser.id, registryId, address }
         );
         if (result) {
             const propertyList = await this.getProperties();
@@ -119,7 +122,7 @@ class PropertyListPage extends React.Component<PropertyListPageProps, PropertyLi
                 propertyList
             });
 
-            enqueueSnackbar('Cadastro realizado com sucesso!', { variant: 'success' });
+            enqueueSnackbar('Cadastro enviado para verificação.', { variant: 'success' });
         } else {
             enqueueSnackbar('Erro ao realizar o cadastro do imóvel', { variant: 'error' });
         }

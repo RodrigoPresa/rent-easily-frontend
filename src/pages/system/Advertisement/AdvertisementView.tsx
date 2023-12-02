@@ -42,7 +42,7 @@ const AdvertisementView: React.FC<AdvertisementViewProps> = ({
   return (
     <>
       {
-        address !== undefined &&
+        //address !== undefined &&
         <Grid container direction="row" alignItems="center">
           <Grid item xs={12} sm={12} md={12} lg={12} >
             <Card sx={{ display: 'flex', flexDirection: 'column', margin: 2 }}>

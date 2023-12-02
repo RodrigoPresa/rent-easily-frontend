@@ -1,6 +1,6 @@
 import User from "../model/User";
 import Lock from "../utils/Lock";
-import { PermissionError } from "./Errors";
+import { ResponseError } from "./Errors";
 import { getBaseUrl, promiseRequest } from "./ServiceApi";
 
 let scopes: string[];
@@ -93,7 +93,7 @@ export default class AuthService {
 		var data = getAuthToken();
 		return data !== null ? data.accessToken : null;
 	}
-		
+
 	async getUser(response: any): Promise<User> {
 		const { data } = await response.json();
 		const [first] = data;
@@ -116,14 +116,14 @@ export default class AuthService {
 			},
 			body: JSON.stringify(request)
 		};
-		//var url = getBaseUrl('user') + 'credentials';
+		
 		var url = "http://localhost:8080/user/find/credentials";
 		const response = await fetch(url, options);
 		if (response.ok) {
 			console.log(response);
 			const user: User = await this.getUser(response);
 			const result = await this.fetchAuthentication(user);
-			if (result.ok) {				
+			if (result.ok) {
 				const tkn: Token = await this.getToken(result);
 				let accessToken = tkn.result[0].payload;
 				let refreshToken = tkn.result[0].payload;
@@ -133,12 +133,9 @@ export default class AuthService {
 			return user;
 		}
 		else {
-			clearAuthToken();
-			if (response.status === 403) {
-				throw new PermissionError();
-			}
-
-			throw new Error("Invalid login");
+			clearAuthToken();			
+			const error: ResponseError = await response.json();
+			throw new ResponseError(error.status, error.message, error.errors);
 		}
 	}
 
@@ -191,27 +188,9 @@ export default class AuthService {
 		return await fetch(url, options);
 	}
 
-	async authenticate(access_token: string) {
-		var url = getBaseUrl('auth') + `authenticate?access_token=${access_token}`;
-		var options = {
-			method: "POST"
-		};
-		var token: AuthResponse;
-		const response = await fetch(url, options);
-		if (response.ok) {
-			token = await response.json();
-			saveAuthToken(token);
-
-			return token.user;
-		}
-		else {
-			clearAuthToken();
-			throw new Error("Invalid login");
-		}
-	}
-
 	async logout() {
 		clearAuthToken();
+		window.location.replace("/");
 	}
 
 	getAuthUser(): AuthResponse {

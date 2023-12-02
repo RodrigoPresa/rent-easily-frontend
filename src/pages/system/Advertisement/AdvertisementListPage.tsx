@@ -112,7 +112,8 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
     getPropertyAddress(propertyId: number): PropertyAddress | undefined {
         const { propertyList } = this.state;
         const property = propertyList.find(p => p.id === propertyId);
-        const address = property?.address;
+        if (!property) return undefined;
+        const address = property.address;
 
         return address;
     }
@@ -144,7 +145,7 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
 
         if (authUser?.id === advertisement.propertyId) return;
 
-        this.setFavoriteStatus(advertisement.id, authUser.id, !this.state.favoriteStatus[advertisement.id]);
+        //this.setFavoriteStatus(advertisement.id, authUser.id, !this.state.favoriteStatus[advertisement.id]);
         this.setState(prevState => {
             const favoriteStatus = { ...prevState.favoriteStatus };
             favoriteStatus[advertisement.id] = !favoriteStatus[advertisement.id];
@@ -164,7 +165,7 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
                             <Grid item xs={6} sm={6} md={4} lg={4} >
                                 <AdvertisementView
                                     id={ad.id}
-                                    address={this.getPropertyAddress(ad.id)}
+                                    address={this.getPropertyAddress(ad.propertyId)}
                                     imageUrl={ads[Math.floor(Math.random() * 4)].imageUrl}
                                     advertisement={ad}
                                     onFavoriteClick={() => this.onFavoriteClickHandler(ad)}

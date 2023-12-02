@@ -5,7 +5,7 @@ import { RouteChildrenProps, useHistory } from "react-router-dom";
 import { RootState } from "../../reducer";
 import { AuthenticationState, logoutAction, successLoginAction } from "../../reducer/Authentication";
 import AuthService from "../../services/AuthService";
-import { PermissionError } from "../../services/Errors";
+import { PermissionError, ResponseError } from "../../services/Errors";
 import LoginForm from "./LoginForm";
 
 interface LoginPageProps extends AuthenticationState, RouteChildrenProps {
@@ -51,8 +51,13 @@ function LoginPage(props: LoginPageProps) {
                 errorMsg = 'Usuário bloqueado';
             } else {
                 errorMsg = e instanceof Error ? e.message : String(e);
-                if (e instanceof Error && e.cause === 401) {
-                    errorMsg = `${e.message}`;
+                if (e instanceof ResponseError) {
+                    if (e.errors[0].message.toLowerCase().includes("no user")) {
+                        errorMsg = 'Login e/ou senha inválidos';
+                    }
+                    else {
+                        errorMsg = `${e.errors[0].message}`;
+                    }
                 } else {
                     errorMsg = 'Erro de comunicação com o servidor';
                 }
@@ -62,7 +67,7 @@ function LoginPage(props: LoginPageProps) {
         } finally {
             loadingAction(false);
         }
-    }    
+    }
 
     return (
         <div

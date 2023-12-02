@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useRouteMatch } from "react-router-dom";
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField, Typography } from "@mui/material";
 import { AdvertisementViewProps } from "./AdvertisementView";
@@ -8,7 +8,10 @@ import DefaultButton from "../../../components/DefaultButton";
 import { BreadcrumbsItem } from "react-breadcrumbs-dynamic";
 import { useAuthentication } from "../../../reducer/Authentication";
 import { ServiceApi } from "../../../services/ServiceApi";
-import Advertisement from "../../../model/Advertisement";
+import Property from "../../../model/Property";
+import Proposal from "../../../model/Proposal";
+import { WithSnackbarProps, withSnackbar } from "notistack";
+import ProposalDTO from "../../../model/ProposalDTO";
 
 const images = [
   "https://s2.glbimg.com/CS6ziQq57qk1F18WhdJoRWDjT8s=/e.glbimg.com/og/ed/f/original/2021/08/09/materiais-naturais-valorizam-a-decoracao-dessa-casa-de-1000-m2-6.jpg",
@@ -24,28 +27,49 @@ const useStyles = makeStyles(() => ({
   }
 }));
 
-const AdvertisementViewPage: React.FC = () => {
+const AdvertisementViewPage: React.FC<WithSnackbarProps> = (props) => {
   const classes = useStyles();
   const location = useLocation();
   const match = useRouteMatch();
-  
+
   const { imageUrl, address, advertisement, onFavoriteClick, isFavorite } = location.state as AdvertisementViewProps;
   const { authUser } = useAuthentication();
 
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [property, setProperty] = useState<Property>();
+  const [proposalList, setProposalList] = useState<Proposal[]>();
   const [isProposalModalOpen, setProposalModalOpen] = useState(false);
-  const [editedInformation, setEditedInformation] = useState(advertisement.information);
-  const [editedRentAmount, setEditedRentAmount] = useState(advertisement.rentAmount);
+  const [proposalInformation, setProposalInformation] = useState("");
+  const [proposalRentAmount, setProposalRentAmount] = useState(0);
 
-  const service = new ServiceApi<Advertisement>('advertisement');
+  const service = new ServiceApi<Property>('property');
+  const proposalService = new ServiceApi<Proposal>('proposal');
 
-  const handleOpenEditModal = () => {
-    setEditModalOpen(true);
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const list = await proposalService.getList();
+        const filteredList = list.data.filter((proposal) => proposal.advertisementId === advertisement.id && proposal.userId === authUser?.id); 
+        setProposalList(filteredList);
+      } catch (error) {
+        console.error("Error fetching proposal:", error);
+      }
+    };
 
-  const handleCloseEditModal = () => {
-    setEditModalOpen(false);
-  };
+    fetchData();
+  }, [proposalList]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const property = await service.getById(advertisement.propertyId);
+        setProperty(property.data[0]);
+      } catch (error) {
+        console.error("Error fetching property:", error);
+      }
+    };
+
+    fetchData();
+  }, [advertisement.propertyId]);
 
   const handleOpenProposalModal = () => {
     setProposalModalOpen(true);
@@ -56,19 +80,28 @@ const AdvertisementViewPage: React.FC = () => {
   };
 
   const handleSaveChanges = async () => {
-    // const result = await service.update(advertisement.id, {
-    //   information: editedInformation,
-    //   rentAmount: editedRentAmount,
-    // });
+    const { enqueueSnackbar } = props;
+    if (!authUser) return;
+    const data: ProposalDTO = {
+      advertisementId: advertisement.id,
+      userId: authUser.id,
+      information: proposalInformation,
+      amount: proposalRentAmount,
+      proposedAt: {
+        date: new Date().getDate().toString(),
+        time: new Date().getTime().toString()
+      } 
+    };
 
-    advertisement.information = editedInformation;
-    advertisement.rentAmount = editedRentAmount;
+    const result = await proposalService.insert(data);
+    if (result) {
+      enqueueSnackbar('Proposta enviada com sucesso.', { variant: 'success' });
+    } else {
+      enqueueSnackbar('Erro ao enviar a proposta para o anúncio', { variant: 'error' });
+    }
 
-
-
-    setEditModalOpen(false);
+    setProposalModalOpen(false);
   };
-
 
   return (
     <>
@@ -92,44 +125,19 @@ const AdvertisementViewPage: React.FC = () => {
           </Grid>
           <Grid item marginBottom={5}>
             {
-              advertisement.propertyId !== authUser?.id ?
-                <DefaultButton variant="contained" style={{ marginRight: 5 }} onClick={handleOpenProposalModal}>Fazer Proposta</DefaultButton> :
-                null
-            }
-            {
-              advertisement.propertyId === authUser?.id ?
-                <DefaultButton variant="contained" onClick={handleOpenEditModal}>Editar anúncio</DefaultButton> :
+              authUser?.id !== property?.userId && !proposalList?.some((proposal) => proposal.advertisementId === advertisement.id && proposal.userId === authUser?.id) ?
+                <DefaultButton
+                  variant="contained"
+                  style={{ marginRight: 5 }}
+                  onClick={handleOpenProposalModal}
+                >
+                  Fazer Proposta
+                </DefaultButton> :
                 null
             }
           </Grid>
         </Grid>
       </Grid>
-
-      {/* Modal de Edição */}
-      <Dialog open={isEditModalOpen} onClose={handleCloseEditModal}>
-        <DialogTitle>Editar Anúncio</DialogTitle>
-        <DialogContent>
-          <TextField
-            label="Informação"
-            fullWidth
-            value={editedInformation}
-            onChange={(e) => setEditedInformation(e.target.value)}
-            margin="normal"
-          />
-          <TextField
-            label="Valor do Aluguel"
-            fullWidth
-            type="number"
-            value={editedRentAmount}
-            onChange={(e) => setEditedRentAmount(parseInt(e.target.value))}
-            margin="normal"
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseEditModal}>Cancelar</Button>
-          <Button onClick={handleSaveChanges}>Salvar</Button>
-        </DialogActions>
-      </Dialog>
 
       {/* Modal de Proposta */}
       <Dialog open={isProposalModalOpen} onClose={handleCloseProposalModal}>
@@ -138,26 +146,26 @@ const AdvertisementViewPage: React.FC = () => {
           <TextField
             label="Informação"
             fullWidth
-            value={""}
-            onChange={() => {}}
+            value={proposalInformation}
+            onChange={(e) => setProposalInformation(e.target.value)}
             margin="normal"
           />
           <TextField
             label="Valor da Proposta"
             fullWidth
             type="number"
-            value={""}
-            onChange={() => {}}
+            value={proposalRentAmount}
+            onChange={(e) => setProposalRentAmount(parseFloat(e.target.value))}
             margin="normal"
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseProposalModal}>Cancelar</Button>
-          <Button onClick={handleCloseProposalModal}>Salvar</Button>
+          <Button onClick={handleSaveChanges}>Salvar</Button>
         </DialogActions>
       </Dialog>
     </>
   );
 };
 
-export default AdvertisementViewPage;
+export default withSnackbar(AdvertisementViewPage);

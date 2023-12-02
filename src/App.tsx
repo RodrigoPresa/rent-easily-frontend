@@ -78,12 +78,7 @@ const Loading = () => <h5>Loading...</h5>;
 class InitialApp extends Component<InitialAppProps> {
 
     componentDidMount() {
-        let { loggedIn, history, authUser } = this.props;
-        // if (loggedIn) {
-        //     history.push('/system');
-        // } else {
-        //     history.push('/login');
-        // }
+        let { history } = this.props;
         history.push('/system');
     }
 
@@ -146,7 +141,7 @@ class App extends Component<AppProps, AppState> {
     }
 
     async verifyAuth() {
-        var { successLoginAction, logoutAction } = this.props;
+        var { successLoginAction } = this.props;
         var authUser = AuthService.instance.getAuthUser();
         if (authUser.user) {
             successLoginAction(authUser.user);
@@ -166,10 +161,6 @@ class App extends Component<AppProps, AppState> {
     }
 
     render() {
-        const { loaded } = this.state;
-        // if (loaded === false) {
-        //     return <Loading />;
-        // }
         return (
             <div className="App">
                 <StyledEngineProvider injectFirst>
