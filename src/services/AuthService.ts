@@ -190,7 +190,7 @@ export default class AuthService {
 
 	async logout() {
 		clearAuthToken();
-		window.location.replace("/");
+		//window.location.replace("/");
 	}
 
 	getAuthUser(): AuthResponse {
