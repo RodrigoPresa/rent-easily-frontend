@@ -102,7 +102,7 @@ class AdvertisementListPage extends React.Component<AdvertisementListPageProps, 
     }
 
     getAdvertisements(searchText: string, page: number, rowsPerPage: number): Promise<Advertisement[]> {
-        return this.service.getList().then(list => (list.data));
+        return this.service.getList(undefined, false).then(list => (list.data));
     }
 
     getProperties(searchText: string, page: number, rowsPerPage: number): Promise<Property[]> {

@@ -90,8 +90,8 @@ export async function promiseRequest(url: string, method?: METHOD, body?: Object
     });
 }
 
-export async function promiseGetRequest(url: string) {
-    return promiseRequest(url, 'GET');
+export async function promiseGetRequest(url: string, useAuthentication?: boolean) {
+    return promiseRequest(url, 'GET', undefined, undefined, useAuthentication);
 }
 
 export interface ResponseData<T> {
@@ -116,14 +116,13 @@ export class ServiceApi<T>{
         return getBaseUrl(model);
     }
 
-    getList(query?: string | null): Promise<ResponseData<T>> {
+    getList(query?: string | null, auth?:boolean): Promise<ResponseData<T>> {
         var baseUrl = this.getBaseUrl();
         var url = baseUrl + 'find/all';
         if (query) {
             url += `?${query}`;
         }
-        console.log(url);
-        return promiseGetRequest(url);
+        return promiseGetRequest(url, auth);
     }
 
     getById(id: number | string): Promise<T> {
