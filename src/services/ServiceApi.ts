@@ -90,8 +90,8 @@ export async function promiseRequest(url: string, method?: METHOD, body?: Object
     });
 }
 
-export async function promiseGetRequest(url: string) {
-    return promiseRequest(url, 'GET');
+export async function promiseGetRequest(url: string, useAuthentication?: boolean) {
+    return promiseRequest(url, 'GET', undefined, undefined, useAuthentication);
 }
 
 export interface ResponseData<T> {
